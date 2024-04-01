@@ -2,9 +2,11 @@
 {
     internal class Program
     {
-        // Declare area height and width of grid
-        public const int width = 50;
-        public const int height = 25;
+        // Declare area HEIGHT and WIDTH of grid
+        public static int WIDTH = Console.WindowWidth;
+        public static int HEIGHT = Console.WindowHeight;
+
+        public bool[,] grid = new bool[WIDTH, HEIGHT];
 
         // Not having to declare a random everywhere is useful
         static readonly Random rndNum = new();
@@ -14,10 +16,10 @@
             ConsoleKeyInfo keyInfo;
 
             // Player's starting coordinates
-            int x = rndNum.Next(width);
-            int y = rndNum.Next(height);
+            int x = rndNum.Next(WIDTH);
+            int y = rndNum.Next(HEIGHT);
 
-            // Clear console, set height and width, draw player, enemies and grid
+            // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
             DrawGrid();
             DrawChar(x, y, '@', ConsoleColor.Cyan, init: true);
@@ -62,13 +64,13 @@
         static void MoveChar(char direction, int oldX, int oldY,
                              out int newX, out int newY)
         {
-            newX = (direction, oldX != 0, oldX != width - 1) switch
+            newX = (direction, oldX != 0, oldX != WIDTH - 1) switch
             {
                 ('l', true, _) => oldX - 1,
                 ('r', _, true) => oldX + 1,
                 _ => oldX
             };
-            newY = (direction, oldY != 0, oldY != height - 1) switch
+            newY = (direction, oldY != 0, oldY != HEIGHT - 1) switch
             {
                 ('u', true, _) => oldY - 1,
                 ('d', _, true) => oldY + 1,
@@ -78,9 +80,68 @@
 
         static void DrawGrid()
         {
-            for (int i = 0; i < height; i++)
+            for (int i = 0; i < HEIGHT; i++)
             {
-                Console.WriteLine(new string('.', width));
+                Console.WriteLine(new string('.', WIDTH));
+            }
+        }
+
+        static void CreateGrid()
+        {
+            int aveRoomWidth = 5;
+            int aveRoomHeight = 5;
+
+            int numOfRoomsAcross = WIDTH / aveRoomWidth / 2;
+            int numOfRoomsDown = HEIGHT / aveRoomHeight / 2;
+
+            int numOfRoomsTotal = numOfRoomsAcross * numOfRoomsDown;
+
+            int[,] roomSizes = new int[numOfRoomsTotal, 2];
+
+            for (int i = 0; i < numOfRoomsTotal; i++)
+            {
+                int currentRoomWidth = aveRoomWidth;
+                int currentRoomHeight = aveRoomHeight;
+
+                int widthChange = rndNum.Next(10) switch
+                {
+                    0 or 1 or 2 or 3 or 4 => 0,
+                    5 or 6 or 7 => 1,
+                    8 or 9 => 2,
+                    _ => 0
+                };
+
+                int heightChange = rndNum.Next(10) switch
+                {
+                    0 or 1 or 2 or 3 or 4 => 0,
+                    5 or 6 or 7 => 1,
+                    8 or 9 => 2,
+                    _ => 0
+                };
+
+                // True = plus, false = minus 
+                bool plusOrMinusWidth = rndNum.Next(2) == 0;
+                bool plusOrMinusHeight = rndNum.Next(2) == 0;
+
+                if (plusOrMinusWidth)
+                {
+                    currentRoomWidth += widthChange;
+                }
+                else
+                {
+                    currentRoomWidth -= widthChange;
+                }
+                if (plusOrMinusHeight)
+                {
+                    currentRoomHeight += heightChange;
+                }
+                else
+                {
+                    currentRoomHeight -= heightChange;
+                }
+
+                roomSizes[i, 0] = currentRoomWidth;
+                roomSizes[i, 1] = currentRoomHeight;
             }
         }
 
