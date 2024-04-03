@@ -6,8 +6,6 @@
         public static int WIDTH = Console.WindowWidth;
         public static int HEIGHT = Console.WindowHeight;
 
-        public bool[,] grid = new bool[WIDTH, HEIGHT];
-
         // Not having to declare a random everywhere is useful
         static readonly Random rndNum = new();
 
@@ -21,9 +19,10 @@
 
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
-            DrawGrid();
+            bool[,] grid = CreateGrid();
+            DrawGrid(grid);
             DrawChar(x, y, '@', ConsoleColor.Cyan, init: true);
-            
+
             while (true)
             {
                 char direction;
@@ -78,71 +77,130 @@
             };
         }
 
-        static void DrawGrid()
+        static void DrawGrid(bool[,] grid)
         {
-            for (int i = 0; i < HEIGHT; i++)
+            for (int y = 0; y < grid.GetLength(1); y++)
             {
-                Console.WriteLine(new string('.', WIDTH));
+                if (y != 0)
+                {
+                    Console.Write('\n');
+                }
+
+                for (int x = 0; x < grid.GetLength(0); x++)
+                {
+                    if (grid[x, y])
+                    {
+                        Console.Write('.');
+                    }
+                    else
+                    {
+                        Console.Write(' ');
+                    }
+                }
             }
         }
 
-        static void CreateGrid()
+        static bool[,] CreateGrid()
         {
-            int aveRoomWidth = 5;
+            bool[,] grid = new bool[WIDTH, HEIGHT];
+
+            int aveRoomWidth = 10;
             int aveRoomHeight = 5;
 
-            int numOfRoomsAcross = WIDTH / aveRoomWidth / 2;
-            int numOfRoomsDown = HEIGHT / aveRoomHeight / 2;
+            int gridSquareWidth = aveRoomWidth * 2;
+            int gridSquareHeight = aveRoomHeight * 2;
 
-            int numOfRoomsTotal = numOfRoomsAcross * numOfRoomsDown;
+            int numOfRoomsAcross = WIDTH / gridSquareWidth;
+            int numOfRoomsDown = HEIGHT / gridSquareHeight;
 
-            int[,] roomSizes = new int[numOfRoomsTotal, 2];
+            int[,,] roomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
 
-            for (int i = 0; i < numOfRoomsTotal; i++)
+            for (int x = 0; x < numOfRoomsAcross; x++)
             {
-                int currentRoomWidth = aveRoomWidth;
-                int currentRoomHeight = aveRoomHeight;
-
-                int widthChange = rndNum.Next(10) switch
+                for (int y = 0; y < numOfRoomsDown; y++)
                 {
-                    0 or 1 or 2 or 3 or 4 => 0,
-                    5 or 6 or 7 => 1,
-                    8 or 9 => 2,
-                    _ => 0
-                };
+                    int currentRoomWidth = aveRoomWidth;
+                    int currentRoomHeight = aveRoomHeight;
 
-                int heightChange = rndNum.Next(10) switch
-                {
-                    0 or 1 or 2 or 3 or 4 => 0,
-                    5 or 6 or 7 => 1,
-                    8 or 9 => 2,
-                    _ => 0
-                };
+                    int widthChange = rndNum.Next(10) switch
+                    {
+                        0 or 1 or 2 or 3 or 4 => 0,
+                        5 or 6 or 7 => 1,
+                        8 or 9 => 2,
+                        _ => 0
+                    };
 
-                // True = plus, false = minus 
-                bool plusOrMinusWidth = rndNum.Next(2) == 0;
-                bool plusOrMinusHeight = rndNum.Next(2) == 0;
+                    int heightChange = rndNum.Next(10) switch
+                    {
+                        0 or 1 or 2 or 3 or 4 => 0,
+                        5 or 6 or 7 => 1,
+                        8 or 9 => 2,
+                        _ => 0
+                    };
 
-                if (plusOrMinusWidth)
-                {
-                    currentRoomWidth += widthChange;
+                    // True = plus, false = minus 
+                    bool plusOrMinusWidth = rndNum.Next(2) == 0;
+                    bool plusOrMinusHeight = rndNum.Next(2) == 0;
+
+                    if (plusOrMinusWidth)
+                    {
+                        currentRoomWidth += widthChange;
+                    }
+                    else
+                    {
+                        currentRoomWidth -= widthChange;
+                    }
+                    if (plusOrMinusHeight)
+                    {
+                        currentRoomHeight += heightChange;
+                    }
+                    else
+                    {
+                        currentRoomHeight -= heightChange;
+                    }
+
+                    int extraWidth = gridSquareWidth - currentRoomWidth;
+                    int extraHeight = gridSquareHeight - currentRoomHeight;
+
+                    int distFromLeft = rndNum.Next(extraWidth) + 1;
+                    int distFromTop = rndNum.Next(extraHeight) + 1;
+
+                    roomSizes[x, y, 0] = currentRoomWidth;
+                    roomSizes[x, y, 1] = currentRoomHeight;
+                    roomSizes[x, y, 2] = distFromLeft;
+                    roomSizes[x, y, 3] = distFromTop;
                 }
-                else
-                {
-                    currentRoomWidth -= widthChange;
-                }
-                if (plusOrMinusHeight)
-                {
-                    currentRoomHeight += heightChange;
-                }
-                else
-                {
-                    currentRoomHeight -= heightChange;
-                }
-
-                roomSizes[i, 0] = currentRoomWidth;
-                roomSizes[i, 1] = currentRoomHeight;
             }
+
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    int gridX = x / gridSquareWidth;
+                    int gridY = y / gridSquareHeight;
+
+                    int gridX2 = x % gridSquareWidth;
+                    int gridY2 = y % gridSquareHeight;
+
+                    int upperXBound = roomSizes[gridX, gridY, 0] + roomSizes[gridX, gridY, 2];
+                    int upperYBound = roomSizes[gridX, gridY, 1] + roomSizes[gridX, gridY, 3];
+                    int lowerXBound = roomSizes[gridX, gridY, 2];
+                    int lowerYBound = roomSizes[gridX, gridY, 3];
+
+                    bool withinBounds = upperXBound > gridX2 && upperYBound > gridY2 && lowerXBound <= gridX2 && lowerYBound <= gridY2;
+
+                    if (withinBounds)
+                    {
+                        grid[x, y] = true;
+                    }
+                    else
+                    {
+                        grid[x, y] = false;
+                    }
+                }
+            }
+
+            return grid;
         }
 
         static void DrawChar(int x, int y, char charType, ConsoleColor color = ConsoleColor.White, int oldX = 0, int oldY = 0, bool init = false)
