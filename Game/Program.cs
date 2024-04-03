@@ -13,14 +13,13 @@
         {
             ConsoleKeyInfo keyInfo;
 
-            // Player's starting coordinates
-            int x = rndNum.Next(WIDTH);
-            int y = rndNum.Next(HEIGHT);
-
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
             bool[,] grid = CreateGrid();
             DrawGrid(grid);
+
+            // Gets players starting coordinates within one of the rooms and draws it there
+            (int x, int y) = PlayerStartingCoords(grid);
             DrawChar(x, y, '@', ConsoleColor.Cyan, init: true);
 
             while (true)
@@ -58,6 +57,41 @@
         {
             Console.CursorVisible = false;
             Console.Clear();
+        }
+
+        static (int, int) PlayerStartingCoords(bool[,] grid)
+        {
+            int numOfPlaces = 0;
+
+            foreach (bool item in grid)
+            {
+                if (item)
+                {
+                    numOfPlaces++;
+                }
+            }
+
+            int place = rndNum.Next(numOfPlaces);
+
+            numOfPlaces = 0;
+
+            for (int x = 0; x < grid.GetLength(0); x++)
+            {
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+                    if (grid[x, y])
+                    {
+                        numOfPlaces++;
+
+                        if (numOfPlaces == place)
+                        {
+                            return (x, y);
+                        }
+                    }
+                }
+            }
+
+            return (0, 0);
         }
 
         static void MoveChar(char direction, int oldX, int oldY,
