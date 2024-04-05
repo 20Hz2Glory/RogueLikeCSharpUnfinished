@@ -31,12 +31,12 @@
                 else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
                 else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
                 else if (keyInfo.Key == ConsoleKey.DownArrow) direction = 'd';
-                else if (keyInfo.Key == ConsoleKey.Escape)
+                else if (keyInfo.Key == ConsoleKey.Escape) 
                 {
                     Console.Clear();
                     break;
                 }
-                else
+                else 
                 {
                     (int left, int top) = Console.GetCursorPosition();
                     Console.SetCursorPosition(left - 1, top);
@@ -45,7 +45,7 @@
                     continue;
                 }
 
-                MoveChar(direction, x, y, out int newX, out int newY);
+                (int newX, int newY) = MoveChar(direction, x, y, grid);
                 DrawChar(newX, newY, '@', ConsoleColor.Cyan, x, y);
 
                 x = newX;
@@ -94,21 +94,37 @@
             return (0, 0);
         }
 
-        static void MoveChar(char direction, int oldX, int oldY,
-                             out int newX, out int newY)
+        static (int, int) MoveChar(char direction, int oldX, int oldY, bool[,] grid)
         {
-            newX = (direction, oldX != 0, oldX != WIDTH - 1) switch
+            int newY;
+            int newX;
+
+            (newX, newY) = direction switch
             {
-                ('l', true, _) => oldX - 1,
-                ('r', _, true) => oldX + 1,
-                _ => oldX
+                'l' => 
+                    (
+                        oldX != 0 && grid[oldX - 1, oldY] ? oldX - 1 : oldX, 
+                        oldY
+                    ),
+                'r' => 
+                    (
+                        oldX != WIDTH - 1 && grid[oldX + 1, oldY] ? oldX + 1 : oldX, 
+                        oldY
+                    ),
+                'u' => 
+                    (
+                        oldX, 
+                        oldY != 0 && grid[oldX, oldY - 1] ? oldY - 1 : oldY
+                    ),
+                'd' => 
+                    (
+                        oldX, 
+                        oldY != HEIGHT - 1 && grid[oldX, oldY + 1] ? oldY + 1 : oldY
+                    ),
+                _ => (oldX, oldY)
             };
-            newY = (direction, oldY != 0, oldY != HEIGHT - 1) switch
-            {
-                ('u', true, _) => oldY - 1,
-                ('d', _, true) => oldY + 1,
-                _ => oldY
-            };
+
+            return (newX, newY);
         }
 
         static void DrawGrid(bool[,] grid)
