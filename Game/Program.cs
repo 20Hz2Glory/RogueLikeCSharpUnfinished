@@ -99,29 +99,32 @@
             int newY;
             int newX;
 
-            (newX, newY) = direction switch
+            switch (direction)
             {
-                'l' => 
-                    (
-                        oldX != 0 && grid[oldX - 1, oldY] ? oldX - 1 : oldX, 
-                        oldY
-                    ),
-                'r' => 
-                    (
-                        oldX != WIDTH - 1 && grid[oldX + 1, oldY] ? oldX + 1 : oldX, 
-                        oldY
-                    ),
-                'u' => 
-                    (
-                        oldX, 
-                        oldY != 0 && grid[oldX, oldY - 1] ? oldY - 1 : oldY
-                    ),
-                'd' => 
-                    (
-                        oldX, 
-                        oldY != HEIGHT - 1 && grid[oldX, oldY + 1] ? oldY + 1 : oldY
-                    ),
-                _ => (oldX, oldY)
+                case 'l':
+                    newX = oldX != 0 && grid[oldX - 1, oldY] ? oldX - 1 : oldX;
+                    newY = oldY;
+                    break;
+
+                case 'r':
+                    newX = oldX != WIDTH - 1 && grid[oldX + 1, oldY] ? oldX + 1 : oldX;
+                    newY = oldY;
+                    break;
+
+                case 'u':
+                    newX = oldX;
+                    newY = oldY != 0 && grid[oldX, oldY - 1] ? oldY - 1 : oldY;
+                    break;
+
+                case 'd':
+                    newX = oldX;
+                    newY = oldY != HEIGHT - 1 && grid[oldX, oldY + 1] ? oldY + 1 : oldY;
+                    break;
+
+                default:
+                    newX = oldX;
+                    newY = oldY;
+                    break;
             };
 
             return (newX, newY);
@@ -152,6 +155,8 @@
 
         static bool[,] CreateGrid()
         {
+            // Based on psuedocode from https://github.com/audinowho/RogueElements
+
             bool[,] grid = new bool[WIDTH, HEIGHT];
 
             int aveRoomWidth = 10;
@@ -162,6 +167,9 @@
 
             int numOfRoomsAcross = WIDTH / gridSquareWidth;
             int numOfRoomsDown = HEIGHT / gridSquareHeight;
+
+            int extraConsoleWidth = WIDTH - (numOfRoomsAcross * gridSquareWidth);
+            int extraConsoleHeight = HEIGHT - (numOfRoomsDown * gridSquareHeight);
 
             int[,,] roomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
 
@@ -175,16 +183,16 @@
                     int widthChange = rndNum.Next(10) switch
                     {
                         0 or 1 or 2 or 3 or 4 => 0,
-                        5 or 6 or 7 => 1,
-                        8 or 9 => 2,
+                        5 or 6 or 7 => aveRoomWidth / 10,
+                        8 or 9 => aveRoomWidth / 5,
                         _ => 0
                     };
 
                     int heightChange = rndNum.Next(10) switch
                     {
                         0 or 1 or 2 or 3 or 4 => 0,
-                        5 or 6 or 7 => 1,
-                        8 or 9 => 2,
+                        5 or 6 or 7 => aveRoomHeight / 10,
+                        8 or 9 => aveRoomHeight / 5,
                         _ => 0
                     };
 
@@ -226,6 +234,17 @@
             {
                 for (int x = 0; x < WIDTH; x++)
                 {
+                    if (HEIGHT - extraConsoleHeight <= y)
+                    {
+                        grid[x, y] = false;
+                        continue;
+                    }
+                    if (WIDTH - extraConsoleWidth <= x)
+                    {
+                        grid[x, y] = false;
+                        continue;
+                    }
+
                     int gridX = x / gridSquareWidth;
                     int gridY = y / gridSquareHeight;
 
