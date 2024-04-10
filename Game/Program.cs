@@ -15,9 +15,16 @@
 
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
+
+            Thread loading = new(new ThreadStart(ShowMapGenLoading));
+            loading.Start();
+
             bool[,] grid = CreateGrid();
             string map = DrawGrid(grid);
 
+            loading.Interrupt();
+
+            Console.Clear();
             Console.Write(map);
 
             // Gets players starting coordinates within one of the rooms and draws it there
@@ -28,7 +35,7 @@
             {
                 char direction;
 
-                keyInfo = Console.ReadKey(false);
+                keyInfo = Console.ReadKey(true);
                 if (keyInfo.Key == ConsoleKey.RightArrow) direction = 'r';
                 else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
                 else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
@@ -40,10 +47,10 @@
                 }
                 else 
                 {
-                    (int left, int top) = Console.GetCursorPosition();
-                    Console.SetCursorPosition(left - 1, top);
-                    Console.Write('·');
-                    Console.SetCursorPosition(left - 1, top);
+                    //(int left, int top) = Console.GetCursorPosition();
+                    //Console.SetCursorPosition(left - 1, top);
+                    //Console.Write('·');
+                    //Console.SetCursorPosition(left - 1, top);
                     continue;
                 }
 
@@ -373,6 +380,32 @@
             Console.ForegroundColor = color;
             Console.Write(charType);
             Console.ResetColor();
+        }
+    
+        static void ShowMapGenLoading()
+        {
+            try
+            {
+                string[] dotSequence = ["   ", ".  ", ".. ", "..."];
+                string message = "Generating map";
+
+                (int left, int top) = Console.GetCursorPosition();
+
+                for (int i = 0; true; i++)
+                {
+                    int sequencePos = i % dotSequence.Length;
+
+                    Console.SetCursorPosition(left, top);
+
+                    Console.WriteLine(message + dotSequence[sequencePos]);
+
+                    Thread.Sleep(250);
+                }
+            }
+            catch (ThreadInterruptedException)
+            {
+
+            }
         }
     }
 }
