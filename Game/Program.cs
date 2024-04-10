@@ -42,7 +42,7 @@
                 {
                     (int left, int top) = Console.GetCursorPosition();
                     Console.SetCursorPosition(left - 1, top);
-                    Console.Write('.');
+                    Console.Write('·');
                     Console.SetCursorPosition(left - 1, top);
                     continue;
                 }
@@ -145,29 +145,29 @@
 
                 for (int x = 0; x < grid.GetLength(0); x++)
                 {
-                    bool[,] surrounding = new bool[3, 3];
-
-                    for (int i = -1; i <= 1; i++)
+                    if (grid[x, y])
                     {
-                        for (int j = -1; j <= 1; j++)
-                        {
-                            try
-                            {
-                                surrounding[i + 1, j + 1] = grid[x + i, y + j];
-                            }
-                            catch (IndexOutOfRangeException)
-                            {
-                                surrounding[i + 1, j + 1] = false;
-                            }
-                        }
-                    }
-
-                    if (surrounding[1, 1])
-                    {
-                        map += '.';
+                        map += '·';
                     }
                     else
                     {
+                        bool[,] surrounding = new bool[3, 3];
+
+                        for (int i = -1; i <= 1; i++)
+                        {
+                            for (int j = -1; j <= 1; j++)
+                            {
+                                try
+                                {
+                                    surrounding[i + 1, j + 1] = grid[x + i, y + j];
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    surrounding[i + 1, j + 1] = false;
+                                }
+                            }
+                        }
+
                         if (!surrounding[0, 0] && !surrounding[1, 0] && !surrounding[2, 0] && !surrounding[0, 1] && !surrounding[2, 1] && !surrounding[0, 2] && !surrounding[1, 2] && !surrounding[2, 2])
                         {
                             map += ' ';
@@ -367,7 +367,7 @@
             if (!init)
             {
                 Console.SetCursorPosition(oldX, oldY);
-                Console.Write('.');
+                Console.Write('·');
             }
             Console.SetCursorPosition(x, y);
             Console.ForegroundColor = color;
