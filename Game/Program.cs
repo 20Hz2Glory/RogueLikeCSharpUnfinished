@@ -16,7 +16,9 @@
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
             bool[,] grid = CreateGrid();
-            DrawGrid(grid);
+            string map = DrawGrid(grid);
+
+            Console.Write(map);
 
             // Gets players starting coordinates within one of the rooms and draws it there
             (int x, int y) = PlayerStartingCoords(grid);
@@ -130,27 +132,115 @@
             return (newX, newY);
         }
 
-        static void DrawGrid(bool[,] grid)
+        static string DrawGrid(bool[,] grid)
         {
+            string map = "";
+
             for (int y = 0; y < grid.GetLength(1); y++)
             {
                 if (y != 0)
                 {
-                    Console.Write('\n');
+                    map += '\n';
                 }
 
                 for (int x = 0; x < grid.GetLength(0); x++)
                 {
-                    if (grid[x, y])
+                    bool[,] surrounding = new bool[3, 3];
+
+                    for (int i = -1; i <= 1; i++)
                     {
-                        Console.Write('.');
+                        for (int j = -1; j <= 1; j++)
+                        {
+                            try
+                            {
+                                surrounding[i + 1, j + 1] = grid[x + i, y + j];
+                            }
+                            catch (IndexOutOfRangeException)
+                            {
+                                surrounding[i + 1, j + 1] = false;
+                            }
+                        }
+                    }
+
+                    if (surrounding[1, 1])
+                    {
+                        map += '.';
                     }
                     else
                     {
-                        Console.Write(' ');
+                        if (!surrounding[0, 0] && !surrounding[1, 0] && !surrounding[2, 0] && !surrounding[0, 1] && !surrounding[2, 1] && !surrounding[0, 2] && !surrounding[1, 2] && !surrounding[2, 2])
+                        {
+                            map += ' ';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && surrounding[2, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '╬';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                           map += '╣';
+                        }
+                        else if (surrounding[0, 2] && surrounding[2, 2] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '╦';
+                        }
+                        else if (surrounding[2, 0] && surrounding[2, 2] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            map += '╠';
+                        }
+                        else if (surrounding[2, 0] && surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '╩';
+                        }
+                        else if ((surrounding[0, 0] || surrounding[0, 2]) && surrounding[2, 1] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            map += '╣';
+                        }
+                        else if ((surrounding[0, 2] || surrounding[2, 2]) && surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '╦';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[2, 2]) && surrounding[0, 1] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            map += '╠';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[0, 0]) && surrounding[1, 2] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '╩';
+                        }
+                        else if ((surrounding[0, 1] || surrounding[2, 1]) && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            map += '║';
+                        }
+                        else if ((surrounding[1, 2] || surrounding[1, 0]) && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            map += '═';
+                        }
+                        else if (surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            map += '╝';
+                        }
+                        else if (surrounding[2, 0] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            map += '╚';
+                        }
+                        else if (surrounding[2, 2] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            map += '╔';
+                        }
+                        else if (surrounding[0, 2] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            map += '╗';
+                        }
+                        else
+                        {
+                            map += ' ';
+                        }
                     }
                 }
             }
+
+            return map;
         }
 
         static bool[,] CreateGrid()
