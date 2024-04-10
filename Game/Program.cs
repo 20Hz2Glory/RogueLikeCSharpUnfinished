@@ -7,7 +7,7 @@
         public static int HEIGHT = Console.WindowHeight;
 
         // Not having to declare a random everywhere is useful
-        static readonly Random rndNum = new();
+        static readonly Random randNum = new();
 
         static void Main()
         {
@@ -40,17 +40,13 @@
                 else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
                 else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
                 else if (keyInfo.Key == ConsoleKey.DownArrow) direction = 'd';
-                else if (keyInfo.Key == ConsoleKey.Escape) 
+                else if (keyInfo.Key == ConsoleKey.Escape)
                 {
                     Console.Clear();
                     break;
                 }
-                else 
+                else
                 {
-                    //(int left, int top) = Console.GetCursorPosition();
-                    //Console.SetCursorPosition(left - 1, top);
-                    //Console.Write('·');
-                    //Console.SetCursorPosition(left - 1, top);
                     continue;
                 }
 
@@ -80,7 +76,7 @@
                 }
             }
 
-            int place = rndNum.Next(numOfPlaces);
+            int place = randNum.Next(numOfPlaces);
 
             numOfPlaces = 0;
 
@@ -185,7 +181,7 @@
                         }
                         else if (surrounding[0, 0] && surrounding[0, 2] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
                         {
-                           map += '╣';
+                            map += '╣';
                         }
                         else if (surrounding[0, 2] && surrounding[2, 2] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
                         {
@@ -256,8 +252,8 @@
 
             bool[,] grid = new bool[WIDTH, HEIGHT];
 
-            int aveRoomWidth = 10;
-            int aveRoomHeight = 5;
+            int aveRoomWidth = 5;
+            int aveRoomHeight = 2;
 
             int gridSquareWidth = aveRoomWidth * 2;
             int gridSquareHeight = aveRoomHeight * 2;
@@ -268,16 +264,20 @@
             int extraConsoleWidth = WIDTH - (numOfRoomsAcross * gridSquareWidth);
             int extraConsoleHeight = HEIGHT - (numOfRoomsDown * gridSquareHeight);
 
+            // roomAcross, roomDown, 0 = currentRoomWidth;
+            // roomAcross, roomDown, 1 = currentRoomHeight;
+            // roomAcross, roomDown, 2 = distFromLeft;
+            // roomAcross, roomDown, 3 = distFromTop;
             int[,,] roomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
 
-            for (int x = 0; x < numOfRoomsAcross; x++)
+            for (int y = 0; y < numOfRoomsDown; y++)
             {
-                for (int y = 0; y < numOfRoomsDown; y++)
+                for (int x = 0; x < numOfRoomsAcross; x++)
                 {
                     int currentRoomWidth = aveRoomWidth;
                     int currentRoomHeight = aveRoomHeight;
 
-                    int widthChange = rndNum.Next(10) switch
+                    int widthChange = randNum.Next(10) switch
                     {
                         0 or 1 or 2 or 3 or 4 => 0,
                         5 or 6 or 7 => aveRoomWidth / 10,
@@ -285,7 +285,7 @@
                         _ => 0
                     };
 
-                    int heightChange = rndNum.Next(10) switch
+                    int heightChange = randNum.Next(10) switch
                     {
                         0 or 1 or 2 or 3 or 4 => 0,
                         5 or 6 or 7 => aveRoomHeight / 10,
@@ -294,8 +294,8 @@
                     };
 
                     // True = plus, false = minus 
-                    bool plusOrMinusWidth = rndNum.Next(2) == 0;
-                    bool plusOrMinusHeight = rndNum.Next(2) == 0;
+                    bool plusOrMinusWidth = randNum.Next(2) == 0;
+                    bool plusOrMinusHeight = randNum.Next(2) == 0;
 
                     if (plusOrMinusWidth)
                     {
@@ -317,8 +317,8 @@
                     int extraWidth = gridSquareWidth - currentRoomWidth;
                     int extraHeight = gridSquareHeight - currentRoomHeight;
 
-                    int distFromLeft = rndNum.Next(extraWidth) + 1;
-                    int distFromTop = rndNum.Next(extraHeight) + 1;
+                    int distFromLeft = randNum.Next(extraWidth) + 1;
+                    int distFromTop = randNum.Next(extraHeight) + 1;
 
                     roomSizes[x, y, 0] = currentRoomWidth;
                     roomSizes[x, y, 1] = currentRoomHeight;
@@ -366,6 +366,33 @@
                 }
             }
 
+            /*
+            for (int y = 0; y < numOfRoomsDown; y++)
+            {
+                for (int x = 0; x < numOfRoomsAcross; x++)
+                {
+                    int maxCorridorLenX = gridSquareWidth * 2;
+                    int maxCorridorLenY = gridSquareHeight * 2;
+
+                    // Up
+                    if (y != 0) 
+                    {
+                        int[]
+                    }
+                    else { }
+
+                    if (x != 0) { }
+                    else { }
+
+                    if (y != numOfRoomsDown) { }
+                    else { }
+
+                    if (x != numOfRoomsAcross) { }
+                    else { }
+                }
+            }
+            */
+
             return grid;
         }
 
@@ -381,7 +408,7 @@
             Console.Write(charType);
             Console.ResetColor();
         }
-    
+
         static void ShowMapGenLoading()
         {
             try
@@ -402,10 +429,7 @@
                     Thread.Sleep(250);
                 }
             }
-            catch (ThreadInterruptedException)
-            {
-
-            }
+            catch (ThreadInterruptedException) { }
         }
     }
 }
