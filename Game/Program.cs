@@ -219,14 +219,6 @@
                         {
                             map += '╩';
                         }
-                        else if ((surrounding[0, 1] || surrounding[2, 1]) && !surrounding[1, 0] && !surrounding[1, 2])
-                        {
-                            map += '║';
-                        }
-                        else if ((surrounding[1, 2] || surrounding[1, 0]) && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '═';
-                        }
                         else if (surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1])
                         {
                             map += '╝';
@@ -242,6 +234,30 @@
                         else if (surrounding[0, 2] && !surrounding[1, 2] && !surrounding[0, 1])
                         {
                             map += '╗';
+                        }
+                        else if (surrounding[1, 2] && surrounding[2, 1] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            map += '╝';
+                        }
+                        else if (surrounding[0, 2] && surrounding[1, 2] && surrounding[0, 1] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            map += '╚';
+                        }
+                        else if (surrounding[0, 0] && surrounding[1, 0] && surrounding[0, 1] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            map += '╔';
+                        }
+                        else if (surrounding[2, 0] && surrounding[1, 0] && surrounding[2, 1] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            map += '╗';
+                        }
+                        else if ((surrounding[0, 1] || surrounding[2, 1]) && (!surrounding[1, 0] || !surrounding[1, 2]))
+                        {
+                            map += '║';
+                        }
+                        else if ((surrounding[1, 2] || surrounding[1, 0]) && (!surrounding[0, 1] || !surrounding[2, 1]))
+                        {
+                            map += '═';
                         }
                         else
                         {
@@ -260,8 +276,8 @@
 
             bool[,] grid = new bool[WIDTH, HEIGHT];
 
-            int aveRoomWidth = 5;
-            int aveRoomHeight = 2;
+            int aveRoomWidth = 10;
+            int aveRoomHeight = 5;
 
             int gridSquareWidth = aveRoomWidth * 2;
             int gridSquareHeight = aveRoomHeight * 2;
@@ -374,7 +390,6 @@
                 }
             }
 
-            /*
             for (int y = 0; y < numOfRoomsDown; y++)
             {
                 for (int x = 0; x < numOfRoomsAcross; x++)
@@ -383,23 +398,51 @@
                     int maxCorridorLenY = gridSquareHeight * 2;
 
                     // Up
-                    if (y != 0) 
+                    if (y != 0)
                     {
-                        int[]
+                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 2], roomSizes[x, y, 0]).ToArray();
+                        int room1Index = room1Places[randNum.Next(0, room1Places.Length)];
+
+                        // The spaces in the room above
+                        int[] room2Places = Enumerable.Range(roomSizes[x, y - 1, 2], roomSizes[x, y - 1, 0]).ToArray();
+                        int room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+
+                        int room1DoorXPos = (x * gridSquareWidth) + room1Index;
+                        int room1DoorYPos = (y * gridSquareHeight) + roomSizes[x, y, 3] - 1;
+
+                        int room2DoorXPos = (x * gridSquareWidth) + room2Index;
+                        int room2DoorYPos = ((y - 1) * gridSquareHeight) + roomSizes[x, y - 1, 3] + roomSizes[x, y - 1, 1];
+
+                        int[] room1DoorPos = [room1DoorXPos, room1DoorYPos];
+                        int[] room2DoorPos = [room2DoorXPos, room2DoorYPos];
+
+                        grid[room1DoorPos[0], room1DoorPos[1]] = true;
+                        grid[room2DoorPos[0], room2DoorPos[1]] = true;
                     }
-                    else { }
 
-                    if (x != 0) { }
-                    else { }
+                    if (x != 0)
+                    {
+                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 3], roomSizes[x, y, 1]).ToArray();
+                        int room1Index = room1Places[randNum.Next(0, room1Places.Length)];
 
-                    if (y != numOfRoomsDown) { }
-                    else { }
+                        // The spaces in the room above
+                        int[] room2Places = Enumerable.Range(roomSizes[x - 1, y, 3], roomSizes[x - 1, y, 1]).ToArray();
+                        int room2Index = room2Places[randNum.Next(0, room2Places.Length)];
 
-                    if (x != numOfRoomsAcross) { }
-                    else { }
+                        int room1DoorXPos = (x * gridSquareWidth) + roomSizes[x, y, 2] - 1;
+                        int room1DoorYPos = (y * gridSquareHeight) + room1Index;
+
+                        int room2DoorXPos = ((x - 1) * gridSquareWidth) + roomSizes[x - 1, y, 2] + roomSizes[x - 1, y, 0];
+                        int room2DoorYPos = (y * gridSquareHeight) + room2Index;
+
+                        int[] room1DoorPos = [room1DoorXPos, room1DoorYPos];
+                        int[] room2DoorPos = [room2DoorXPos, room2DoorYPos];
+
+                        grid[room1DoorPos[0], room1DoorPos[1]] = true;
+                        grid[room2DoorPos[0], room2DoorPos[1]] = true;
+                    }
                 }
             }
-            */
 
             return grid;
         }
