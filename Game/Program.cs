@@ -394,52 +394,110 @@
             {
                 for (int x = 0; x < numOfRoomsAcross; x++)
                 {
-                    int maxCorridorLenX = gridSquareWidth * 2;
-                    int maxCorridorLenY = gridSquareHeight * 2;
-
-                    // Up
+                    // Up and Down
                     if (y != 0)
                     {
-                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 2], roomSizes[x, y, 0]).ToArray();
-                        int room1Index = room1Places[randNum.Next(0, room1Places.Length)];
-
-                        // The spaces in the room above
-                        int[] room2Places = Enumerable.Range(roomSizes[x, y - 1, 2], roomSizes[x, y - 1, 0]).ToArray();
-                        int room2Index = room2Places[randNum.Next(0, room2Places.Length)];
-
-                        int room1DoorXPos = (x * gridSquareWidth) + room1Index;
                         int room1DoorYPos = (y * gridSquareHeight) + roomSizes[x, y, 3] - 1;
-
-                        int room2DoorXPos = (x * gridSquareWidth) + room2Index;
                         int room2DoorYPos = ((y - 1) * gridSquareHeight) + roomSizes[x, y - 1, 3] + roomSizes[x, y - 1, 1];
 
-                        int[] room1DoorPos = [room1DoorXPos, room1DoorYPos];
-                        int[] room2DoorPos = [room2DoorXPos, room2DoorYPos];
+                        int distance = room1DoorYPos - room2DoorYPos;
 
-                        grid[room1DoorPos[0], room1DoorPos[1]] = true;
-                        grid[room2DoorPos[0], room2DoorPos[1]] = true;
+                        if (distance == 0)
+                        {
+                            continue;
+                        }
+
+                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 2], roomSizes[x, y, 0]).ToArray();
+                        int[] room2Places = Enumerable.Range(roomSizes[x, y - 1, 2], roomSizes[x, y - 1, 0]).ToArray();
+
+                        int room1Index;
+                        int room2Index;
+
+                        if (distance <= 3)
+                        {
+                            List<int> roomsPlaces = [];
+
+                            for (int i = 0; i < room1Places.Length; i++)
+                            {
+                                for (int j = 0; j < room2Places.Length; j++)
+                                {
+                                    if (room1Places[i] == room2Places[j])
+                                    {
+                                        roomsPlaces.Add(room1Places[i]);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+
+                            room1Index = roomsIndex;
+                            room2Index = roomsIndex;
+                        }
+                        else
+                        {
+                            room1Index = room1Places[randNum.Next(0, room1Places.Length)];
+                            room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+                        }
+
+                        int room1DoorXPos = (x * gridSquareWidth) + room1Index;
+                        int room2DoorXPos = (x * gridSquareWidth) + room2Index;
+
+                        grid[room1DoorXPos, room1DoorYPos] = true;
+                        grid[room2DoorXPos, room2DoorYPos] = true;
                     }
 
+                    // Left and Right
                     if (x != 0)
                     {
-                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 3], roomSizes[x, y, 1]).ToArray();
-                        int room1Index = room1Places[randNum.Next(0, room1Places.Length)];
-
-                        // The spaces in the room above
-                        int[] room2Places = Enumerable.Range(roomSizes[x - 1, y, 3], roomSizes[x - 1, y, 1]).ToArray();
-                        int room2Index = room2Places[randNum.Next(0, room2Places.Length)];
-
                         int room1DoorXPos = (x * gridSquareWidth) + roomSizes[x, y, 2] - 1;
-                        int room1DoorYPos = (y * gridSquareHeight) + room1Index;
-
                         int room2DoorXPos = ((x - 1) * gridSquareWidth) + roomSizes[x - 1, y, 2] + roomSizes[x - 1, y, 0];
+
+                        int distance = room1DoorXPos - room2DoorXPos;
+
+                        if (distance == 0)
+                        {
+                            continue;
+                        }
+
+                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 3], roomSizes[x, y, 1]).ToArray();
+                        int[] room2Places = Enumerable.Range(roomSizes[x - 1, y, 3], roomSizes[x - 1, y, 1]).ToArray();
+
+                        int room1Index;
+                        int room2Index;
+
+                        if (distance <= 3)
+                        {
+                            List<int> roomsPlaces = [];
+
+                            for (int i = 0; i < room1Places.Length; i++)
+                            {
+                                for (int j = 0; j < room2Places.Length; j++)
+                                {
+                                    if (room1Places[i] == room2Places[j])
+                                    {
+                                        roomsPlaces.Add(room1Places[i]);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+
+                            room1Index = roomsIndex;
+                            room2Index = roomsIndex;
+                        }
+                        else
+                        {
+                            room1Index = room1Places[randNum.Next(0, room1Places.Length)];
+                            room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+                        }
+
+                        int room1DoorYPos = (y * gridSquareHeight) + room1Index;
                         int room2DoorYPos = (y * gridSquareHeight) + room2Index;
 
-                        int[] room1DoorPos = [room1DoorXPos, room1DoorYPos];
-                        int[] room2DoorPos = [room2DoorXPos, room2DoorYPos];
-
-                        grid[room1DoorPos[0], room1DoorPos[1]] = true;
-                        grid[room2DoorPos[0], room2DoorPos[1]] = true;
+                        grid[room1DoorXPos, room1DoorYPos] = true;
+                        grid[room2DoorXPos, room2DoorYPos] = true;
                     }
                 }
             }
