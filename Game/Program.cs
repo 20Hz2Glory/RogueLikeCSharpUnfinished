@@ -413,6 +413,11 @@
                         int room1Index;
                         int room2Index;
 
+                        int room1DoorXPos;
+                        int room2DoorXPos;
+
+                        List<int[]> corridorPlaces = [];
+
                         if (distance <= 3)
                         {
                             List<int> roomsPlaces = [];
@@ -430,21 +435,34 @@
                             }
 
                             int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+                            int xPos = (x * gridSquareWidth) + roomsIndex;
 
-                            room1Index = roomsIndex;
-                            room2Index = roomsIndex;
+                            for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
+                            {
+                                corridorPlaces.Add([xPos, room2DoorYPos + i]);
+                            }
                         }
                         else
                         {
                             room1Index = room1Places[randNum.Next(0, room1Places.Length)];
                             room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+
+                            room1DoorXPos = (x * gridSquareWidth) + room1Index;
+                            room2DoorXPos = (x * gridSquareWidth) + room2Index;
+
+                            int turningPoint = 0;
+
+
+                            corridorPlaces.Add([room1DoorXPos, room1DoorYPos]);
+                            corridorPlaces.Add([room2DoorXPos, room2DoorYPos]);
                         }
 
-                        int room1DoorXPos = (x * gridSquareWidth) + room1Index;
-                        int room2DoorXPos = (x * gridSquareWidth) + room2Index;
+                        for (int i = 0; i < corridorPlaces.Count; i++)
+                        {
+                            int[] currentPos = corridorPlaces[i];
 
-                        grid[room1DoorXPos, room1DoorYPos] = true;
-                        grid[room2DoorXPos, room2DoorYPos] = true;
+                            grid[currentPos[0], currentPos[1]] = true;
+                        }
                     }
 
                     // Left and Right
@@ -466,6 +484,11 @@
                         int room1Index;
                         int room2Index;
 
+                        int room1DoorYPos;
+                        int room2DoorYPos;
+
+                        List<int[]> corridorPlaces = [];
+
                         if (distance <= 3)
                         {
                             List<int> roomsPlaces = [];
@@ -483,21 +506,31 @@
                             }
 
                             int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+                            int yPos = (y * gridSquareHeight) + roomsIndex;
 
-                            room1Index = roomsIndex;
-                            room2Index = roomsIndex;
+                            for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
+                            {
+                                corridorPlaces.Add([room2DoorXPos + i, yPos]);
+                            }
                         }
                         else
                         {
                             room1Index = room1Places[randNum.Next(0, room1Places.Length)];
                             room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+
+                            room1DoorYPos = (y * gridSquareHeight) + room1Index;
+                            room2DoorYPos = (y * gridSquareHeight) + room2Index;
+
+                            corridorPlaces.Add([room1DoorXPos, room1DoorYPos]);
+                            corridorPlaces.Add([room2DoorXPos, room2DoorYPos]);
                         }
 
-                        int room1DoorYPos = (y * gridSquareHeight) + room1Index;
-                        int room2DoorYPos = (y * gridSquareHeight) + room2Index;
+                        for (int i = 0; i < corridorPlaces.Count; i++)
+                        {
+                            int[] currentPos = corridorPlaces[i];
 
-                        grid[room1DoorXPos, room1DoorYPos] = true;
-                        grid[room2DoorXPos, room2DoorYPos] = true;
+                            grid[currentPos[0], currentPos[1]] = true;
+                        }
                     }
                 }
             }
