@@ -19,14 +19,18 @@
 
             // New thread for loading screen while grid is loading
             Thread loading = new(new ThreadStart(ShowMapGenLoading));
+
+            // Start loading iterations
             loading.Start();
 
+            // Create grid and turn it into a string
             bool[,] grid = CreateGrid();
-
-            loading.Interrupt();
-
             string map = DrawGrid(grid);
 
+            // Stop loading
+            loading.Interrupt();
+
+            // Clear console and write the map
             Console.Clear();
             Console.Write(map);
 
@@ -36,29 +40,39 @@
 
             while (true)
             {
+                // Directional character
                 char direction;
 
+                // Reads user's keypress
                 keyInfo = Console.ReadKey(true);
-                if (keyInfo.Key == ConsoleKey.RightArrow) direction = 'r';
-                else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
-                else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
-                else if (keyInfo.Key == ConsoleKey.DownArrow) direction = 'd';
-                else if (keyInfo.Key == ConsoleKey.Escape)
-                {
-                    Console.Clear();
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
 
+                // If its an arrow key or WASD convert to the right direction
+                // Else if escape, quit the game
+                // Else skip to next iteration
+                if (keyInfo.Key == ConsoleKey.RightArrow) direction = 'r';
+                else if (keyInfo.Key == ConsoleKey.D) direction = 'r';
+                else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
+                else if (keyInfo.Key == ConsoleKey.A) direction = 'l';
+                else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
+                else if (keyInfo.Key == ConsoleKey.W) direction = 'u';
+                else if (keyInfo.Key == ConsoleKey.DownArrow) direction = 'd';
+                else if (keyInfo.Key == ConsoleKey.S) direction = 'd';
+                else if (keyInfo.Key == ConsoleKey.Escape) break;
+                else continue;
+
+                // Get the new place the user wants to move to
                 (int newX, int newY) = MoveChar(direction, x, y, grid);
                 DrawChar(newX, newY, '@', ConsoleColor.Cyan, x, y);
 
+                // Set x and y to their new respective variables
                 x = newX;
                 y = newY;
             }
+
+            Console.Clear();
+
+            Console.WriteLine("Thanks for playing!\nPress any key to exit");
+            Console.ReadKey(true);
         }
 
         static void InitializeConsole()
@@ -353,40 +367,42 @@
                     roomSizes[x, y, 3] = distFromTop;
                 }
             }
-
-            //int[,,] roomSizes = 
-            //{ 
-            //    { 
-            //        { 9, 5, 3, 2 }, 
-            //        { 10, 5, 9, 1 }, 
-            //        { 9, 5, 7, 4 } 
-            //    }, 
-            //    { 
-            //        { 10, 5, 6, 4 }, 
-            //        { 10, 6, 10, 4 }, 
-            //        { 9, 6, 3, 4 } 
-            //    }, 
-            //    { 
-            //        { 10, 5, 6, 3 }, 
-            //        { 11, 5, 3, 3 }, 
-            //        { 12, 5, 2, 2 } 
-            //    }, 
-            //    { 
-            //        { 12, 5, 1, 5 }, 
-            //        { 11, 5, 3, 1 }, 
-            //        { 11, 5, 3, 1 } 
-            //    }, 
-            //    { 
-            //        { 8, 5, 8, 5 }, 
-            //        { 10, 5, 5, 5 }, 
-            //        { 10, 5, 5, 4 } 
-            //    }, 
-            //    {
-            //        { 10, 5, 9, 4 }, 
-            //        { 11, 5, 3, 3 }, 
-            //        { 8, 5, 5, 1 } 
-            //    } 
-            //};
+            
+            /*
+            int[,,] roomSizes =
+            {
+                {
+                    { 9, 5, 3, 2 },
+                    { 10, 5, 9, 1 },
+                    { 9, 5, 7, 4 }
+                },
+                {
+                    { 10, 5, 6, 4 },
+                    { 10, 6, 10, 4 },
+                    { 9, 6, 3, 4 }
+                },
+                {
+                    { 10, 5, 6, 3 },
+                    { 11, 5, 3, 3 },
+                    { 12, 5, 2, 2 }
+                },
+                {
+                    { 12, 5, 1, 5 },
+                    { 11, 5, 3, 1 },
+                    { 11, 5, 3, 1 }
+                },
+                {
+                    { 8, 5, 8, 5 },
+                    { 10, 5, 5, 5 },
+                    { 10, 5, 5, 4 }
+                },
+                {
+                    { 10, 5, 9, 4 },
+                    { 11, 5, 3, 3 },
+                    { 8, 5, 5, 1 }
+                }
+            };
+            */
 
             for (int y = 0; y < HEIGHT; y++)
             {
