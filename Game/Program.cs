@@ -11,18 +11,21 @@
 
         static void Main()
         {
+            // Declare variable to get user key input
             ConsoleKeyInfo keyInfo;
 
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
 
+            // New thread for loading screen while grid is loading
             Thread loading = new(new ThreadStart(ShowMapGenLoading));
             loading.Start();
 
             bool[,] grid = CreateGrid();
-            string map = DrawGrid(grid);
 
             loading.Interrupt();
+
+            string map = DrawGrid(grid);
 
             Console.Clear();
             Console.Write(map);
@@ -317,7 +320,7 @@
                         _ => 0
                     };
 
-                    // True = plus, false = minus 
+                    // true = plus, false = minus 
                     bool plusOrMinusWidth = randNum.Next(2) == 0;
                     bool plusOrMinusHeight = randNum.Next(2) == 0;
 
@@ -350,6 +353,40 @@
                     roomSizes[x, y, 3] = distFromTop;
                 }
             }
+
+            //int[,,] roomSizes = 
+            //{ 
+            //    { 
+            //        { 9, 5, 3, 2 }, 
+            //        { 10, 5, 9, 1 }, 
+            //        { 9, 5, 7, 4 } 
+            //    }, 
+            //    { 
+            //        { 10, 5, 6, 4 }, 
+            //        { 10, 6, 10, 4 }, 
+            //        { 9, 6, 3, 4 } 
+            //    }, 
+            //    { 
+            //        { 10, 5, 6, 3 }, 
+            //        { 11, 5, 3, 3 }, 
+            //        { 12, 5, 2, 2 } 
+            //    }, 
+            //    { 
+            //        { 12, 5, 1, 5 }, 
+            //        { 11, 5, 3, 1 }, 
+            //        { 11, 5, 3, 1 } 
+            //    }, 
+            //    { 
+            //        { 8, 5, 8, 5 }, 
+            //        { 10, 5, 5, 5 }, 
+            //        { 10, 5, 5, 4 } 
+            //    }, 
+            //    {
+            //        { 10, 5, 9, 4 }, 
+            //        { 11, 5, 3, 3 }, 
+            //        { 8, 5, 5, 1 } 
+            //    } 
+            //};
 
             for (int y = 0; y < HEIGHT; y++)
             {
@@ -400,9 +437,9 @@
                         int room1DoorYPos = (y * gridSquareHeight) + roomSizes[x, y, 3] - 1;
                         int room2DoorYPos = ((y - 1) * gridSquareHeight) + roomSizes[x, y - 1, 3] + roomSizes[x, y - 1, 1];
 
-                        int distance = room1DoorYPos - room2DoorYPos;
+                        int distance = room1DoorYPos - room2DoorYPos + 1;
 
-                        if (distance == 0)
+                        if (distance <= 1)
                         {
                             continue;
                         }
@@ -418,7 +455,7 @@
 
                         List<int[]> corridorPlaces = [];
 
-                        if (distance <= 3)
+                        if (distance < 5)
                         {
                             List<int> roomsPlaces = [];
 
@@ -450,11 +487,34 @@
                             room1DoorXPos = (x * gridSquareWidth) + room1Index;
                             room2DoorXPos = (x * gridSquareWidth) + room2Index;
 
-                            int turningPoint = 0;
+                            int turningPoint = randNum.Next(3, distance - 1);
+                            int count = 0;
 
+                            for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
+                            {
+                                int xPos = room2DoorXPos;
 
-                            corridorPlaces.Add([room1DoorXPos, room1DoorYPos]);
-                            corridorPlaces.Add([room2DoorXPos, room2DoorYPos]);
+                                if (i >= turningPoint)
+                                {
+                                    if (i == turningPoint && (xPos + count) != room1DoorXPos)
+                                    {
+                                        i--;
+
+                                        int increment = room1DoorXPos - room2DoorXPos;
+                                        increment /= Math.Abs(increment);
+
+                                        count += increment;
+
+                                        xPos += count;
+                                    }
+                                    else
+                                    {
+                                        xPos = room1DoorXPos;
+                                    }
+                                }
+
+                                corridorPlaces.Add([xPos, room2DoorYPos + i]);
+                            }
                         }
 
                         for (int i = 0; i < corridorPlaces.Count; i++)
@@ -521,8 +581,34 @@
                             room1DoorYPos = (y * gridSquareHeight) + room1Index;
                             room2DoorYPos = (y * gridSquareHeight) + room2Index;
 
-                            corridorPlaces.Add([room1DoorXPos, room1DoorYPos]);
-                            corridorPlaces.Add([room2DoorXPos, room2DoorYPos]);
+                            int turningPoint = randNum.Next(3, distance - 1);
+                            int count = 0;
+
+                            for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
+                            {
+                                int yPos = room2DoorYPos;
+
+                                if (i >= turningPoint)
+                                {
+                                    if (i == turningPoint && (yPos + count) != room1DoorYPos)
+                                    {
+                                        i--;
+
+                                        int increment = room1DoorYPos - room2DoorYPos;
+                                        increment /= Math.Abs(increment);
+
+                                        count += increment;
+
+                                        yPos += count;
+                                    }
+                                    else
+                                    {
+                                        yPos = room1DoorYPos;
+                                    }
+                                }
+
+                                corridorPlaces.Add([room2DoorXPos + i, yPos]);
+                            }
                         }
 
                         for (int i = 0; i < corridorPlaces.Count; i++)
@@ -536,6 +622,47 @@
             }
 
             return grid;
+        }
+
+        static void PrintIntArray(int[,,] roomSizes)
+        {
+            Console.Write("int[,,] roomSizes = {");
+
+            for (int i = 0; i < roomSizes.GetLength(0); i++)
+            {
+                if (i != 0)
+                {
+                    Console.Write(", ");
+                }
+
+                Console.Write("{");
+
+                for (int j = 0; j < roomSizes.GetLength(1); j++)
+                {
+                    if (j != 0)
+                    {
+                        Console.Write(", ");
+                    }
+
+                    Console.Write("{");
+
+                    for (int k = 0; k < roomSizes.GetLength(2); k++)
+                    {
+                        if (k != 0)
+                        {
+                            Console.Write(", ");
+                        }
+
+                        Console.Write(roomSizes[i, j, k]);
+                    }
+
+                    Console.Write("}");
+                }
+
+                Console.Write("}");
+            }
+
+            Console.Write("};");
         }
 
         static void DrawChar(int x, int y, char charType, ConsoleColor color = ConsoleColor.White, int oldX = 0, int oldY = 0, bool init = false)
