@@ -367,7 +367,7 @@
                     roomSizes[x, y, 3] = distFromTop;
                 }
             }
-            
+
             /*
             int[,,] roomSizes =
             {
@@ -698,6 +698,9 @@
         {
             try
             {
+                StartScreen();
+
+                Console.Clear();
                 string[] dotSequence = ["   ", ".  ", ".. ", "..."];
                 string message = "Generating map";
 
@@ -715,6 +718,61 @@
                 }
             }
             catch (ThreadInterruptedException) { }
+        }
+
+        static void StartScreen()
+        {
+
+            int halfExtraHeight, extraHeight, halfExtrawidth, extraWidth;
+            halfExtraHeight = extraHeight = halfExtrawidth = extraWidth = 0;
+
+            // String array holds the acsii art
+            string[] title =
+            {
+                """            ▓█████▄  █    ██  ███▄    █   ▄████ ▓█████  ▒█████   ███▄    █              """,
+                """            ▒██▀ ██▌ ██  ▓██▒ ██ ▀█   █  ██▒ ▀█▒▓█   ▀ ▒██▒  ██▒ ██ ▀█   █              """,
+                """            ░██   █▌▓██  ▒██░▓██  ▀█ ██▒▒██░▄▄▄░▒███   ▒██░  ██▒▓██  ▀█ ██▒             """,
+                """            ░▓█▄   ▌▓▓█  ░██░▓██▒  ▐▌██▒░▓█  ██▓▒▓█  ▄ ▒██   ██░▓██▒  ▐▌██▒             """,
+                """            ░▒████▓ ▒▒█████▓ ▒██░   ▓██░░▒▓███▀▒░▒████▒░ ████▓▒░▒██░   ▓██░             """,
+                """             ▒▒▓  ▒ ░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒  ░▒   ▒ ░░ ▒░ ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒              """,
+                """             ░ ▒  ▒ ░░▒░ ░ ░ ░ ░░   ░ ▒░  ░   ░  ░ ░  ░  ░ ▒ ▒░ ░ ░░   ░ ▒░             """,
+                """             ░ ░  ░  ░░░ ░ ░    ░   ░ ░ ░ ░   ░    ░   ░ ░ ░ ▒     ░   ░ ░              """,
+                """               ░       ░              ░       ░    ░  ░    ░ ░           ░              """,
+                """             ░                                                                          """,
+                """ ▄▄▄      ▓█████▄  ██▒   █▓▓█████  ███▄    █ ▄▄▄█████▓ █    ██  ██▀███  ▓█████   ██████ """,
+                """▒████▄    ▒██▀ ██▌▓██░   █▒▓█   ▀  ██ ▀█   █ ▓  ██▒ ▓▒ ██  ▓██▒▓██ ▒ ██▒▓█   ▀ ▒██    ▒ """,
+                """▒██  ▀█▄  ░██   █▌ ▓██  █▒░▒███   ▓██  ▀█ ██▒▒ ▓██░ ▒░▓██  ▒██░▓██ ░▄█ ▒▒███   ░ ▓██▄   """,
+                """░██▄▄▄▄██ ░▓█▄   ▌  ▒██ █░░▒▓█  ▄ ▓██▒  ▐▌██▒░ ▓██▓ ░ ▓▓█  ░██░▒██▀▀█▄  ▒▓█  ▄   ▒   ██▒""",
+                """ ▓█   ▓██▒░▒████▓    ▒▀█░  ░▒████▒▒██░   ▓██░  ▒██▒ ░ ▒▒█████▓ ░██▓ ▒██▒░▒████▒▒██████▒▒""",
+                """ ▒▒   ▓▒█░ ▒▒▓  ▒    ░ ▐░  ░░ ▒░ ░░ ▒░   ▒ ▒   ▒ ░░   ░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░░░ ▒░ ░▒ ▒▓▒ ▒ ░""",
+                """  ▒   ▒▒ ░ ░ ▒  ▒    ░ ░░   ░ ░  ░░ ░░   ░ ▒░    ░    ░░▒░ ░ ░   ░▒ ░ ▒░ ░ ░  ░░ ░▒  ░ ░""",
+                """  ░   ▒    ░ ░  ░      ░░     ░ <PRESS ENTER TO CONTINUE>░ ░ ░   ░░   ░    ░   ░  ░  ░  """,
+                """      ░  ░   ░          ░     ░  ░         ░             ░        ░        ░  ░      ░  """,
+                """           ░           ░                                                                """
+            };
+
+            // Make cursor invisible
+
+            // Declare variables to put the text in the middle
+            extraWidth = WIDTH - title[0].Length;
+            halfExtrawidth = extraWidth / 2;
+            extraHeight = HEIGHT - title.Length;
+            halfExtraHeight = extraHeight / 2;
+
+
+            // Iterate through each string in title
+            for (int i = 0; i < title.Length; i++)
+            {
+                // Set colour, cursor position, and print
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.SetCursorPosition(halfExtrawidth, halfExtraHeight + i);
+                Console.WriteLine(title[i]);
+            }
+
+            Console.ReadKey(true);
+
+            // Set colour back to white
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }
