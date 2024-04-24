@@ -31,6 +31,7 @@
             loading.Interrupt();
 
             // Clear console and write the map
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
             Console.Write(map);
 
@@ -62,6 +63,7 @@
 
                 // Get the new place the user wants to move to
                 (int newX, int newY) = MoveChar(direction, x, y, grid);
+                Console.ForegroundColor = ConsoleColor.White;
                 DrawChar(newX, newY, '@', ConsoleColor.Cyan, x, y);
 
                 // Set x and y to their new respective variables
@@ -443,198 +445,287 @@
                 }
             }
 
-            for (int y = 0; y < numOfRoomsDown; y++)
+            bool[,] visited = new bool[numOfRoomsAcross, numOfRoomsDown];
+            List<int[]> order = new();
+
+            int currentX = randNum.Next(0, numOfRoomsAcross);
+            int currentY = randNum.Next(0, numOfRoomsDown);
+
+            int counter = 0;
+
+            for (int k = 0; k < numOfRoomsAcross * numOfRoomsDown; k++)
             {
-                for (int x = 0; x < numOfRoomsAcross; x++)
+                order.Add([currentX, currentY]);
+                visited[currentX, currentY] = true;
+
+                List<char> availDirecs = ['L', 'R', 'U', 'D'];
+
+                //if (currentY <= 0) availDirecs.Remove('U');
+                //if (currentY >= numOfRoomsDown) availDirecs.Remove('D');
+                //if (currentX <= 0) availDirecs.Remove('L');
+                //if (currentY >= numOfRoomsAcross) availDirecs.Remove('R');
+
+                try
                 {
-                    // Up and Down
-                    if (y != 0)
+                    if (visited[currentX, currentY - 1])
+                        availDirecs.Remove('U');
+                }
+                catch (IndexOutOfRangeException) { availDirecs.Remove('U'); }
+                try
+                {
+                    if (visited[currentX, currentY + 1])
+                        availDirecs.Remove('D');
+                }
+                catch (IndexOutOfRangeException) { availDirecs.Remove('D'); }
+                try
+                {
+                    if (visited[currentX - 1, currentY])
+                        availDirecs.Remove('L');
+                }
+                catch (IndexOutOfRangeException) { availDirecs.Remove('L'); }
+                try
+                {
+                    if (visited[currentX + 1, currentY])
+                        availDirecs.Remove('R');
+                }
+                catch (IndexOutOfRangeException) { availDirecs.Remove('R'); }
+
+                if (availDirecs.Count == 0)
+                {
+                    k--;
+                    counter--;
+
+                    if (counter < 0)
                     {
-                        int room1DoorYPos = (y * gridSquareHeight) + roomSizes[x, y, 3] - 1;
-                        int room2DoorYPos = ((y - 1) * gridSquareHeight) + roomSizes[x, y - 1, 3] + roomSizes[x, y - 1, 1];
+                        break;
+                    }
 
-                        int distance = room1DoorYPos - room2DoorYPos + 1;
+                    currentX = order[counter][0];
+                    currentY = order[counter][1];
 
-                        if (distance <= 1)
+                    continue;
+                }
+
+                char nextDirec = availDirecs.Count != 0 ? availDirecs[randNum.Next(0, availDirecs.Count)] : ' ';
+
+                // Up and Down
+                if (nextDirec == 'U' || nextDirec == 'D')
+                {
+                    if (nextDirec == 'D') currentY++;
+
+                    int room1DoorYPos = (currentY * gridSquareHeight) + roomSizes[currentX, currentY, 3] - 1;
+                    int room2DoorYPos = ((currentY - 1) * gridSquareHeight) + roomSizes[currentX, currentY - 1, 3] + roomSizes[currentX, currentY - 1, 1];
+
+                    int distance = room1DoorYPos - room2DoorYPos + 1;
+
+                    if (distance <= 1)
+                    {
+                        k--;
+                        if (nextDirec == 'D') currentY--;
+
+                        continue;
+                    }
+
+                    int[] room1Places = Enumerable.Range(roomSizes[currentX, currentY, 2], roomSizes[currentX, currentY, 0]).ToArray();
+                    int[] room2Places = Enumerable.Range(roomSizes[currentX, currentY - 1, 2], roomSizes[currentX, currentY - 1, 0]).ToArray();
+
+                    int room1Index;
+                    int room2Index;
+
+                    int room1DoorXPos;
+                    int room2DoorXPos;
+
+                    List<int[]> corridorPlaces = [];
+
+                    if (distance < 5)
+                    {
+                        List<int> roomsPlaces = [];
+
+                        for (int i = 0; i < room1Places.Length; i++)
                         {
+                            for (int j = 0; j < room2Places.Length; j++)
+                            {
+                                if (room1Places[i] == room2Places[j])
+                                {
+                                    roomsPlaces.Add(room1Places[i]);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (roomsPlaces.Count == 0)
+                        {
+                            k--;
+                            if (nextDirec == 'D') currentY--;
+
                             continue;
                         }
 
-                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 2], roomSizes[x, y, 0]).ToArray();
-                        int[] room2Places = Enumerable.Range(roomSizes[x, y - 1, 2], roomSizes[x, y - 1, 0]).ToArray();
+                        int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+                        int xPos = (currentX * gridSquareWidth) + roomsIndex;
 
-                        int room1Index;
-                        int room2Index;
-
-                        int room1DoorXPos;
-                        int room2DoorXPos;
-
-                        List<int[]> corridorPlaces = [];
-
-                        if (distance < 5)
+                        for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
                         {
-                            List<int> roomsPlaces = [];
+                            corridorPlaces.Add([xPos, room2DoorYPos + i]);
+                        }
+                    }
+                    else
+                    {
+                        room1Index = room1Places[randNum.Next(0, room1Places.Length)];
+                        room2Index = room2Places[randNum.Next(0, room2Places.Length)];
 
-                            for (int i = 0; i < room1Places.Length; i++)
+                        room1DoorXPos = (currentX * gridSquareWidth) + room1Index;
+                        room2DoorXPos = (currentX * gridSquareWidth) + room2Index;
+
+                        int turningPoint = randNum.Next(3, distance - 1);
+                        int count = 0;
+
+                        for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
+                        {
+                            int xPos = room2DoorXPos;
+
+                            if (i >= turningPoint)
                             {
-                                for (int j = 0; j < room2Places.Length; j++)
+                                if (i == turningPoint && (xPos + count) != room1DoorXPos)
                                 {
-                                    if (room1Places[i] == room2Places[j])
-                                    {
-                                        roomsPlaces.Add(room1Places[i]);
-                                        break;
-                                    }
+                                    i--;
+
+                                    int increment = room1DoorXPos - room2DoorXPos;
+                                    increment /= Math.Abs(increment);
+
+                                    count += increment;
+
+                                    xPos += count;
+                                }
+                                else
+                                {
+                                    xPos = room1DoorXPos;
                                 }
                             }
 
-                            int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
-                            int xPos = (x * gridSquareWidth) + roomsIndex;
-
-                            for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
-                            {
-                                corridorPlaces.Add([xPos, room2DoorYPos + i]);
-                            }
-                        }
-                        else
-                        {
-                            room1Index = room1Places[randNum.Next(0, room1Places.Length)];
-                            room2Index = room2Places[randNum.Next(0, room2Places.Length)];
-
-                            room1DoorXPos = (x * gridSquareWidth) + room1Index;
-                            room2DoorXPos = (x * gridSquareWidth) + room2Index;
-
-                            int turningPoint = randNum.Next(3, distance - 1);
-                            int count = 0;
-
-                            for (int i = 0; i + room2DoorYPos <= room1DoorYPos; i++)
-                            {
-                                int xPos = room2DoorXPos;
-
-                                if (i >= turningPoint)
-                                {
-                                    if (i == turningPoint && (xPos + count) != room1DoorXPos)
-                                    {
-                                        i--;
-
-                                        int increment = room1DoorXPos - room2DoorXPos;
-                                        increment /= Math.Abs(increment);
-
-                                        count += increment;
-
-                                        xPos += count;
-                                    }
-                                    else
-                                    {
-                                        xPos = room1DoorXPos;
-                                    }
-                                }
-
-                                corridorPlaces.Add([xPos, room2DoorYPos + i]);
-                            }
-                        }
-
-                        for (int i = 0; i < corridorPlaces.Count; i++)
-                        {
-                            int[] currentPos = corridorPlaces[i];
-
-                            grid[currentPos[0], currentPos[1]] = true;
+                            corridorPlaces.Add([xPos, room2DoorYPos + i]);
                         }
                     }
 
-                    // Left and Right
-                    if (x != 0)
+                    for (int i = 0; i < corridorPlaces.Count; i++)
                     {
-                        int room1DoorXPos = (x * gridSquareWidth) + roomSizes[x, y, 2] - 1;
-                        int room2DoorXPos = ((x - 1) * gridSquareWidth) + roomSizes[x - 1, y, 2] + roomSizes[x - 1, y, 0];
+                        int[] currentPos = corridorPlaces[i];
 
-                        int distance = room1DoorXPos - room2DoorXPos;
-
-                        if (distance == 0)
-                        {
-                            continue;
-                        }
-
-                        int[] room1Places = Enumerable.Range(roomSizes[x, y, 3], roomSizes[x, y, 1]).ToArray();
-                        int[] room2Places = Enumerable.Range(roomSizes[x - 1, y, 3], roomSizes[x - 1, y, 1]).ToArray();
-
-                        int room1Index;
-                        int room2Index;
-
-                        int room1DoorYPos;
-                        int room2DoorYPos;
-
-                        List<int[]> corridorPlaces = [];
-
-                        if (distance <= 3)
-                        {
-                            List<int> roomsPlaces = [];
-
-                            for (int i = 0; i < room1Places.Length; i++)
-                            {
-                                for (int j = 0; j < room2Places.Length; j++)
-                                {
-                                    if (room1Places[i] == room2Places[j])
-                                    {
-                                        roomsPlaces.Add(room1Places[i]);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
-                            int yPos = (y * gridSquareHeight) + roomsIndex;
-
-                            for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
-                            {
-                                corridorPlaces.Add([room2DoorXPos + i, yPos]);
-                            }
-                        }
-                        else
-                        {
-                            room1Index = room1Places[randNum.Next(0, room1Places.Length)];
-                            room2Index = room2Places[randNum.Next(0, room2Places.Length)];
-
-                            room1DoorYPos = (y * gridSquareHeight) + room1Index;
-                            room2DoorYPos = (y * gridSquareHeight) + room2Index;
-
-                            int turningPoint = randNum.Next(3, distance - 1);
-                            int count = 0;
-
-                            for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
-                            {
-                                int yPos = room2DoorYPos;
-
-                                if (i >= turningPoint)
-                                {
-                                    if (i == turningPoint && (yPos + count) != room1DoorYPos)
-                                    {
-                                        i--;
-
-                                        int increment = room1DoorYPos - room2DoorYPos;
-                                        increment /= Math.Abs(increment);
-
-                                        count += increment;
-
-                                        yPos += count;
-                                    }
-                                    else
-                                    {
-                                        yPos = room1DoorYPos;
-                                    }
-                                }
-
-                                corridorPlaces.Add([room2DoorXPos + i, yPos]);
-                            }
-                        }
-
-                        for (int i = 0; i < corridorPlaces.Count; i++)
-                        {
-                            int[] currentPos = corridorPlaces[i];
-
-                            grid[currentPos[0], currentPos[1]] = true;
-                        }
+                        grid[currentPos[0], currentPos[1]] = true;
                     }
                 }
+
+                // Left and Right
+                if (nextDirec == 'L' || nextDirec == 'R')
+                {
+                    if (nextDirec == 'R') currentX++;
+
+                    int room1DoorXPos = (currentX * gridSquareWidth) + roomSizes[currentX, currentY, 2] - 1;
+                    int room2DoorXPos = ((currentX - 1) * gridSquareWidth) + roomSizes[currentX - 1, currentY, 2] + roomSizes[currentX - 1, currentY, 0];
+
+                    int distance = room1DoorXPos - room2DoorXPos;
+
+                    if (distance == 0)
+                    {
+                        k--;
+                        if (nextDirec == 'R') currentX--;
+
+                        continue;
+                    }
+
+                    int[] room1Places = Enumerable.Range(roomSizes[currentX, currentY, 3], roomSizes[currentX, currentY, 1]).ToArray();
+                    int[] room2Places = Enumerable.Range(roomSizes[currentX - 1, currentY, 3], roomSizes[currentX - 1, currentY, 1]).ToArray();
+
+                    int room1Index;
+                    int room2Index;
+
+                    int room1DoorYPos;
+                    int room2DoorYPos;
+
+                    List<int[]> corridorPlaces = [];
+
+                    if (distance <= 3)
+                    {
+                        List<int> roomsPlaces = [];
+
+                        for (int i = 0; i < room1Places.Length; i++)
+                        {
+                            for (int j = 0; j < room2Places.Length; j++)
+                            {
+                                if (room1Places[i] == room2Places[j])
+                                {
+                                    roomsPlaces.Add(room1Places[i]);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (roomsPlaces.Count == 0)
+                        {
+                            k--;
+                            if (nextDirec == 'R') currentX--;
+
+                            continue;
+                        }
+
+                        int roomsIndex = roomsPlaces[randNum.Next(0, roomsPlaces.Count)];
+                        int yPos = (currentY * gridSquareHeight) + roomsIndex;
+
+                        for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
+                        {
+                            corridorPlaces.Add([room2DoorXPos + i, yPos]);
+                        }
+                    }
+                    else
+                    {
+                        room1Index = room1Places[randNum.Next(0, room1Places.Length)];
+                        room2Index = room2Places[randNum.Next(0, room2Places.Length)];
+
+                        room1DoorYPos = (currentY * gridSquareHeight) + room1Index;
+                        room2DoorYPos = (currentY * gridSquareHeight) + room2Index;
+
+                        int turningPoint = randNum.Next(3, distance - 1);
+                        int count = 0;
+
+                        for (int i = 0; i + room2DoorXPos <= room1DoorXPos; i++)
+                        {
+                            int yPos = room2DoorYPos;
+
+                            if (i >= turningPoint)
+                            {
+                                if (i == turningPoint && (yPos + count) != room1DoorYPos)
+                                {
+                                    i--;
+
+                                    int increment = room1DoorYPos - room2DoorYPos;
+                                    increment /= Math.Abs(increment);
+
+                                    count += increment;
+
+                                    yPos += count;
+                                }
+                                else
+                                {
+                                    yPos = room1DoorYPos;
+                                }
+                            }
+
+                            corridorPlaces.Add([room2DoorXPos + i, yPos]);
+                        }
+                    }
+
+                    for (int i = 0; i < corridorPlaces.Count; i++)
+                    {
+                        int[] currentPos = corridorPlaces[i];
+
+                        grid[currentPos[0], currentPos[1]] = true;
+                    }
+                }
+
+                if (nextDirec == 'U') currentY--;
+                if (nextDirec == 'L') currentX--;
+
+                counter++;
             }
 
             return grid;
@@ -722,9 +813,7 @@
 
         static void StartScreen()
         {
-
             int halfExtraHeight, extraHeight, halfExtrawidth, extraWidth;
-            halfExtraHeight = extraHeight = halfExtrawidth = extraWidth = 0;
 
             // String array holds the acsii art
             string[] title =
@@ -751,14 +840,11 @@
                 """           ░           ░                                                                """
             };
 
-            // Make cursor invisible
-
             // Declare variables to put the text in the middle
             extraWidth = WIDTH - title[0].Length;
             halfExtrawidth = extraWidth / 2;
             extraHeight = HEIGHT - title.Length;
             halfExtraHeight = extraHeight / 2;
-
 
             // Iterate through each string in title
             for (int i = 0; i < title.Length; i++)
