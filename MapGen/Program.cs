@@ -51,23 +51,26 @@
             numOfRooms = numOfRoomsAcross * numOfRoomsDown;
 
             Grid = new bool[width, height];
-            RoomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
-        }
 
-        public void CreateRoomSizes()
-        {
             // roomAcross, roomDown, 0 = currentRoomWidth;
             // roomAcross, roomDown, 1 = currentRoomHeight;
             // roomAcross, roomDown, 2 = distFromLeft;
             // roomAcross, roomDown, 3 = distFromTop;
-            
+            RoomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
+        }
 
+        protected void CreateRoomSizes()
+        {
             for (int y = 0; y < numOfRoomsDown; y++)
             {
                 for (int x = 0; x < numOfRoomsAcross; x++)
                 {
+                    // Method to get random size and position of a room
                     static (int, int) GetSizeAndPosition(int size, int gridSize)
                     {
+                        // 50% for a 0
+                        // 30% for a tenth the size
+                        // 20% for a fifth the size
                         int change = randNum.Next(10) switch
                         {
                             0 or 1 or 2 or 3 or 4 => 0,
@@ -76,26 +79,36 @@
                             _ => 0
                         };
 
+                        // Choose whether to add or subtract difference
                         bool plusOrMinus = randNum.Next(2) == 0;
 
+                        // Add or subtract change
                         size = plusOrMinus switch
                         {
                             true => size -= change,
                             false => size += change
                         };
 
+                        // Find the amount of extra space in the grid
                         int extra = gridSize - size;
 
+                        // Get a random distance from the top or side of the grid
                         int dist = randNum.Next(extra) + 1;
 
                         return (dist, size);
                     }
 
-                    int roomWidth, roomHeight, distFromLeft, distFromTop;
+                    // Declare variables
+                    int roomWidth, 
+                        roomHeight, 
+                        distFromLeft, 
+                        distFromTop;
 
+                    // Assign variables
                     (distFromLeft, roomWidth) = GetSizeAndPosition(aveRoomWidth, gridSquareWidth);
                     (distFromTop, roomHeight) = GetSizeAndPosition(aveRoomHeight, gridSquareHeight);
 
+                    // Save variables to RoomSizes
                     RoomSizes[x, y, 0] = roomWidth;
                     RoomSizes[x, y, 1] = roomHeight;
                     RoomSizes[x, y, 2] = distFromLeft;
@@ -104,7 +117,7 @@
             }
         }
 
-        public void MarkRoomsTrue()
+        protected void MarkRoomsTrue()
         {
             for (int y = 0; 
                 y < height; 
@@ -148,7 +161,7 @@
             }
         }
 
-        public void CreatePaths()
+        protected void CreatePaths()
         {
             bool[,] visited = new bool[numOfRoomsAcross, numOfRoomsDown];
             List<int[]> order = [];
@@ -203,6 +216,8 @@
 
                 char nextDirec = availDirecs[randNum.Next(0, availDirecs.Count)];
 
+                List<int[]> corridorPlaces = [];
+
                 // Up and Down
                 if (nextDirec == 'U' || nextDirec == 'D')
                 {
@@ -230,23 +245,10 @@
                     int room1DoorXPos;
                     int room2DoorXPos;
 
-                    List<int[]> corridorPlaces = [];
 
                     if (distance < 5)
                     {
-                        List<int> roomsPlaces = [];
-
-                        for (int i = 0; i < room1Places.Length; i++)
-                        {
-                            for (int j = 0; j < room2Places.Length; j++)
-                            {
-                                if (room1Places[i] == room2Places[j])
-                                {
-                                    roomsPlaces.Add(room1Places[i]);
-                                    break;
-                                }
-                            }
-                        }
+                        List<int> roomsPlaces = GetPossibleCorridorPos(room1Places, room2Places);
 
                         if (roomsPlaces.Count == 0)
                         {
@@ -320,7 +322,7 @@
 
                     int distance = room1DoorXPos - room2DoorXPos;
 
-                    if (distance == 0)
+                    if (distance <= 1)
                     {
                         k--;
                         if (nextDirec == 'R') currentX--;
@@ -337,23 +339,9 @@
                     int room1DoorYPos;
                     int room2DoorYPos;
 
-                    List<int[]> corridorPlaces = [];
-
-                    if (distance <= 3)
+                    if (distance < 5)
                     {
-                        List<int> roomsPlaces = [];
-
-                        for (int i = 0; i < room1Places.Length; i++)
-                        {
-                            for (int j = 0; j < room2Places.Length; j++)
-                            {
-                                if (room1Places[i] == room2Places[j])
-                                {
-                                    roomsPlaces.Add(room1Places[i]);
-                                    break;
-                                }
-                            }
-                        }
+                        List<int> roomsPlaces = GetPossibleCorridorPos(room1Places, room2Places);
 
                         if (roomsPlaces.Count == 0)
                         {
@@ -408,19 +396,38 @@
                             corridorPlaces.Add([room2DoorXPos + i, yPos]);
                         }
                     }
+                }
 
-                    for (int i = 0; i < corridorPlaces.Count; i++)
-                    {
-                        int[] currentPos = corridorPlaces[i];
+                for (int i = 0; i < corridorPlaces.Count; i++)
+                {
+                    int[] currentPos = corridorPlaces[i];
 
-                        Grid[currentPos[0], currentPos[1]] = true;
-                    }
+                    Grid[currentPos[0], currentPos[1]] = true;
                 }
 
                 if (nextDirec == 'U') currentY--;
                 if (nextDirec == 'L') currentX--;
 
                 counter++;
+            }
+
+            List<int> GetPossibleCorridorPos(int[] room1Places, int[] room2Places)
+            {
+                List<int> roomsPlaces = [];
+
+                for (int i = 0; i < room1Places.Length; i++)
+                {
+                    for (int j = 0; j < room2Places.Length; j++)
+                    {
+                        if (room1Places[i] == room2Places[j])
+                        {
+                            roomsPlaces.Add(room1Places[i]);
+                            break;
+                        }
+                    }
+                }
+
+                return roomsPlaces;
             }
         }
 
