@@ -41,23 +41,23 @@
 
             while (true)
             {
-                // Directional character
-                char direction;
-
                 // Reads user's keypress
                 keyInfo = Console.ReadKey(true);
 
-                // If its an arrow key or WASD convert to the right direction
-                // Else if escape, quit the game
-                // Else skip to next iteration
-                if (keyInfo.Key == ConsoleKey.RightArrow) direction = 'r';
-                else if (keyInfo.Key == ConsoleKey.D) direction = 'r';
-                else if (keyInfo.Key == ConsoleKey.LeftArrow) direction = 'l';
-                else if (keyInfo.Key == ConsoleKey.A) direction = 'l';
-                else if (keyInfo.Key == ConsoleKey.UpArrow) direction = 'u';
-                else if (keyInfo.Key == ConsoleKey.W) direction = 'u';
-                else if (keyInfo.Key == ConsoleKey.DownArrow) direction = 'd';
-                else if (keyInfo.Key == ConsoleKey.S) direction = 'd';
+                // Dictionary of keys and their corresponding keypress meaning
+                Dictionary<ConsoleKey, char> keyDirections = new()
+                {
+                    { ConsoleKey.RightArrow, 'r' },
+                    { ConsoleKey.D, 'r' },
+                    { ConsoleKey.LeftArrow, 'l' },
+                    { ConsoleKey.A, 'l' },
+                    { ConsoleKey.UpArrow, 'u' },
+                    { ConsoleKey.W, 'u' },
+                    { ConsoleKey.DownArrow, 'd' },
+                    { ConsoleKey.S, 'd' }
+                };
+
+                if (keyDirections.TryGetValue(keyInfo.Key, out char direction)) { }
                 else if (keyInfo.Key == ConsoleKey.Escape) break;
                 else continue;
 
@@ -307,6 +307,8 @@
             int extraConsoleWidth = WIDTH - (numOfRoomsAcross * gridSquareWidth);
             int extraConsoleHeight = HEIGHT - (numOfRoomsDown * gridSquareHeight);
 
+            int numOfRooms = numOfRoomsAcross * numOfRoomsDown;
+
             // roomAcross, roomDown, 0 = currentRoomWidth;
             // roomAcross, roomDown, 1 = currentRoomHeight;
             // roomAcross, roomDown, 2 = distFromLeft;
@@ -317,54 +319,38 @@
             {
                 for (int x = 0; x < numOfRoomsAcross; x++)
                 {
-                    int currentRoomWidth = aveRoomWidth;
-                    int currentRoomHeight = aveRoomHeight;
+                    (int, int) GetSizeAndPosition(int size, int gridSize)
+                    {
+                        int change = randNum.Next(10) switch
+                        {
+                            0 or 1 or 2 or 3 or 4 => 0,
+                            5 or 6 or 7 => size / 10,
+                            8 or 9 => size / 5,
+                            _ => 0
+                        };
 
-                    int widthChange = randNum.Next(10) switch
-                    {
-                        0 or 1 or 2 or 3 or 4 => 0,
-                        5 or 6 or 7 => aveRoomWidth / 10,
-                        8 or 9 => aveRoomWidth / 5,
-                        _ => 0
-                    };
+                        bool plusOrMinus = randNum.Next(2) == 0;
 
-                    int heightChange = randNum.Next(10) switch
-                    {
-                        0 or 1 or 2 or 3 or 4 => 0,
-                        5 or 6 or 7 => aveRoomHeight / 10,
-                        8 or 9 => aveRoomHeight / 5,
-                        _ => 0
-                    };
+                        size = plusOrMinus switch
+                        {
+                            true => size -= change,
+                            false => size += change
+                        };
 
-                    // true = plus, false = minus 
-                    bool plusOrMinusWidth = randNum.Next(2) == 0;
-                    bool plusOrMinusHeight = randNum.Next(2) == 0;
+                        int extra = gridSize - size;
 
-                    if (plusOrMinusWidth)
-                    {
-                        currentRoomWidth += widthChange;
-                    }
-                    else
-                    {
-                        currentRoomWidth -= widthChange;
-                    }
-                    if (plusOrMinusHeight)
-                    {
-                        currentRoomHeight += heightChange;
-                    }
-                    else
-                    {
-                        currentRoomHeight -= heightChange;
+                        int dist = randNum.Next(extra) + 1;
+
+                        return (dist, size);
                     }
 
-                    int extraWidth = gridSquareWidth - currentRoomWidth;
-                    int extraHeight = gridSquareHeight - currentRoomHeight;
+                    int roomWidth, roomHeight, distFromLeft, distFromTop;
 
-                    int distFromLeft = randNum.Next(extraWidth) + 1;
-                    int distFromTop = randNum.Next(extraHeight) + 1;
+                    (distFromLeft, roomWidth) = GetSizeAndPosition(aveRoomWidth, gridSquareWidth);
+                    (distFromTop, roomHeight) = GetSizeAndPosition(aveRoomHeight, gridSquareHeight);
 
-                    roomSizes[x, y, 0] = currentRoomWidth;
-                    roomSizes[x, y, 1] = currentRoomHeight;
+                    roomSizes[x, y, 0] = roomWidth;
+                    roomSizes[x, y, 1] = roomHeight;
                     roomSizes[x, y, 2] = distFromLeft;
                     roomSizes[x, y, 3] = distFromTop;
                 }
@@ -446,49 +432,39 @@
             }
 
             bool[,] visited = new bool[numOfRoomsAcross, numOfRoomsDown];
-            List<int[]> order = new();
+            List<int[]> order = [];
 
             int currentX = randNum.Next(0, numOfRoomsAcross);
             int currentY = randNum.Next(0, numOfRoomsDown);
 
             int counter = 0;
 
-            for (int k = 0; k < numOfRoomsAcross * numOfRoomsDown; k++)
+            for (int k = 0; k < numOfRooms; k++)
             {
                 order.Add([currentX, currentY]);
                 visited[currentX, currentY] = true;
 
                 List<char> availDirecs = ['L', 'R', 'U', 'D'];
 
-                //if (currentY <= 0) availDirecs.Remove('U');
-                //if (currentY >= numOfRoomsDown) availDirecs.Remove('D');
-                //if (currentX <= 0) availDirecs.Remove('L');
-                //if (currentY >= numOfRoomsAcross) availDirecs.Remove('R');
+                void CheckDirection(char c, int dx, int dy)
+                {
+                    try
+                    {
+                        if (visited[currentX + dx, currentY + dy])
+                        {
+                            availDirecs.Remove(c);
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        availDirecs.Remove(c);
+                    }
+                }
 
-                try
-                {
-                    if (visited[currentX, currentY - 1])
-                        availDirecs.Remove('U');
-                }
-                catch (IndexOutOfRangeException) { availDirecs.Remove('U'); }
-                try
-                {
-                    if (visited[currentX, currentY + 1])
-                        availDirecs.Remove('D');
-                }
-                catch (IndexOutOfRangeException) { availDirecs.Remove('D'); }
-                try
-                {
-                    if (visited[currentX - 1, currentY])
-                        availDirecs.Remove('L');
-                }
-                catch (IndexOutOfRangeException) { availDirecs.Remove('L'); }
-                try
-                {
-                    if (visited[currentX + 1, currentY])
-                        availDirecs.Remove('R');
-                }
-                catch (IndexOutOfRangeException) { availDirecs.Remove('R'); }
+                CheckDirection('U', 0, -1);
+                CheckDirection('D', 0, 1);
+                CheckDirection('L', -1, 0);
+                CheckDirection('R', 1, 0);
 
                 if (availDirecs.Count == 0)
                 {
@@ -506,7 +482,7 @@
                     continue;
                 }
 
-                char nextDirec = availDirecs.Count != 0 ? availDirecs[randNum.Next(0, availDirecs.Count)] : ' ';
+                char nextDirec = availDirecs[randNum.Next(0, availDirecs.Count)];
 
                 // Up and Down
                 if (nextDirec == 'U' || nextDirec == 'D')
