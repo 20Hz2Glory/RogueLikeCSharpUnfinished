@@ -11,6 +11,8 @@ namespace Game
         // Not having to declare a random everywhere is useful
         static readonly Random randNum = new();
 
+        static Map WorldMap = new(WIDTH, HEIGHT, 10, 5);
+
         static void Main()
         {
             // Declare variable to get user key input
@@ -26,10 +28,9 @@ namespace Game
             loading.Start();
 
             // Create grid and turn it into a string
-            Map map1 = new(WIDTH, HEIGHT, 10, 5);
-            map1.CreateFullMap();
-
-            string map = DrawGrid(map1.Grid);
+            WorldMap.CreateFullMap();
+            WorldMap.CreateStringMap();
+            WorldMap.CreateCharMap();
 
             // Stop loading
             loading.Interrupt();
@@ -37,10 +38,10 @@ namespace Game
             // Clear console and write the map
             Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
-            Console.Write(map);
+            Console.Write(WorldMap.StringMap);
 
             // Gets players starting coordinates within one of the rooms and draws it there
-            (int x, int y) = PlayerStartingCoords(map1.Grid);
+            (int x, int y) = PlayerStartingCoords(WorldMap.Grid);
             DrawChar(x, y, '@', ConsoleColor.Cyan, init: true);
 
             while (true)
@@ -66,7 +67,7 @@ namespace Game
                 else continue;
 
                 // Get the new place the user wants to move to
-                (int newX, int newY) = MoveChar(direction, x, y, map1.Grid);
+                (int newX, int newY) = MoveChar(direction, x, y, WorldMap.Grid);
                 Console.ForegroundColor = ConsoleColor.White;
                 DrawChar(newX, newY, '@', ConsoleColor.Cyan, x, y);
 
@@ -158,141 +159,6 @@ namespace Game
             return (newX, newY);
         }
 
-        static string DrawGrid(bool[,] grid)
-        {
-            string map = "";
-
-            for (int y = 0; y < grid.GetLength(1); y++)
-            {
-                if (y != 0)
-                {
-                    map += '\n';
-                }
-
-                for (int x = 0; x < grid.GetLength(0); x++)
-                {
-                    if (grid[x, y])
-                    {
-                        map += '·';
-                    }
-                    else
-                    {
-                        bool[,] surrounding = new bool[3, 3];
-
-                        for (int i = -1; i <= 1; i++)
-                        {
-                            for (int j = -1; j <= 1; j++)
-                            {
-                                try
-                                {
-                                    surrounding[i + 1, j + 1] = grid[x + i, y + j];
-                                }
-                                catch (IndexOutOfRangeException)
-                                {
-                                    surrounding[i + 1, j + 1] = false;
-                                }
-                            }
-                        }
-
-                        if (!surrounding[0, 0] && !surrounding[1, 0] && !surrounding[2, 0] && !surrounding[0, 1] && !surrounding[2, 1] && !surrounding[0, 2] && !surrounding[1, 2] && !surrounding[2, 2])
-                        {
-                            map += ' ';
-                        }
-                        else if (surrounding[0, 0] && surrounding[0, 2] && surrounding[2, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╬';
-                        }
-                        else if (surrounding[0, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╬';
-                        }
-                        else if (surrounding[0, 2] && surrounding[2, 0] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╬';
-                        }
-                        else if (surrounding[0, 0] && surrounding[0, 2] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
-                        {
-                            map += '╣';
-                        }
-                        else if (surrounding[0, 2] && surrounding[2, 2] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╦';
-                        }
-                        else if (surrounding[2, 0] && surrounding[2, 2] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
-                        {
-                            map += '╠';
-                        }
-                        else if (surrounding[2, 0] && surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╩';
-                        }
-                        else if ((surrounding[0, 0] || surrounding[0, 2]) && surrounding[2, 1] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
-                        {
-                            map += '╣';
-                        }
-                        else if ((surrounding[0, 2] || surrounding[2, 2]) && surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╦';
-                        }
-                        else if ((surrounding[2, 0] || surrounding[2, 2]) && surrounding[0, 1] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
-                        {
-                            map += '╠';
-                        }
-                        else if ((surrounding[2, 0] || surrounding[0, 0]) && surrounding[1, 2] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
-                        {
-                            map += '╩';
-                        }
-                        else if (surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1])
-                        {
-                            map += '╝';
-                        }
-                        else if (surrounding[2, 0] && !surrounding[1, 0] && !surrounding[2, 1])
-                        {
-                            map += '╚';
-                        }
-                        else if (surrounding[2, 2] && !surrounding[1, 2] && !surrounding[2, 1])
-                        {
-                            map += '╔';
-                        }
-                        else if (surrounding[0, 2] && !surrounding[1, 2] && !surrounding[0, 1])
-                        {
-                            map += '╗';
-                        }
-                        else if (surrounding[1, 2] && surrounding[2, 1] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[0, 1])
-                        {
-                            map += '╝';
-                        }
-                        else if (surrounding[0, 2] && surrounding[1, 2] && surrounding[0, 1] && !surrounding[1, 0] && !surrounding[2, 1])
-                        {
-                            map += '╚';
-                        }
-                        else if (surrounding[0, 0] && surrounding[1, 0] && surrounding[0, 1] && !surrounding[1, 2] && !surrounding[2, 1])
-                        {
-                            map += '╔';
-                        }
-                        else if (surrounding[2, 0] && surrounding[1, 0] && surrounding[2, 1] && !surrounding[1, 2] && !surrounding[0, 1])
-                        {
-                            map += '╗';
-                        }
-                        else if ((surrounding[0, 1] || surrounding[2, 1]) && (!surrounding[1, 0] || !surrounding[1, 2]))
-                        {
-                            map += '║';
-                        }
-                        else if ((surrounding[1, 2] || surrounding[1, 0]) && (!surrounding[0, 1] || !surrounding[2, 1]))
-                        {
-                            map += '═';
-                        }
-                        else
-                        {
-                            map += ' ';
-                        }
-                    }
-                }
-            }
-
-            return map;
-        }
-
         static void PrintIntArray(int[,,] roomSizes)
         {
             Console.Write("int[,,] roomSizes = {");
@@ -339,7 +205,7 @@ namespace Game
             if (!init)
             {
                 Console.SetCursorPosition(oldX, oldY);
-                Console.Write('·');
+                Console.Write(WorldMap.CharMap[oldX, oldY]);
             }
             Console.SetCursorPosition(x, y);
             Console.ForegroundColor = color;

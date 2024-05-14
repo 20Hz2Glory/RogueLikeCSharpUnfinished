@@ -31,6 +31,10 @@
 
         public int[,,] RoomSizes;
 
+        public char[,] CharMap;
+
+        public string StringMap;
+
         public Map(int w, int h, int rW, int rH)
         {
             width = w;
@@ -57,10 +61,15 @@
             // roomAcross, roomDown, 2 = distFromLeft;
             // roomAcross, roomDown, 3 = distFromTop;
             RoomSizes = new int[numOfRoomsAcross, numOfRoomsDown, 4];
+
+            CharMap = new char[width, height];
+
+            StringMap = "";
         }
 
-        protected void CreateRoomSizes()
+        public void CreateRoomSizes()
         {
+            // Iterate through each room
             for (int y = 0; y < numOfRoomsDown; y++)
             {
                 for (int x = 0; x < numOfRoomsAcross; x++)
@@ -117,7 +126,7 @@
             }
         }
 
-        protected void MarkRoomsTrue()
+        public void MarkRoomsTrue()
         {
             for (int y = 0; 
                 y < height; 
@@ -161,7 +170,7 @@
             }
         }
 
-        protected void CreatePaths()
+        public void CreatePaths()
         {
             bool[,] visited = new bool[numOfRoomsAcross, numOfRoomsDown];
             List<int[]> order = [];
@@ -239,12 +248,7 @@
                     int[] room1Places = Enumerable.Range(RoomSizes[currentX, currentY, 2], RoomSizes[currentX, currentY, 0]).ToArray();
                     int[] room2Places = Enumerable.Range(RoomSizes[currentX, currentY - 1, 2], RoomSizes[currentX, currentY - 1, 0]).ToArray();
 
-                    int room1Index;
-                    int room2Index;
-
-                    int room1DoorXPos;
-                    int room2DoorXPos;
-
+                    int room1Index, room2Index, room1DoorXPos, room2DoorXPos;
 
                     if (distance < 5)
                     {
@@ -254,7 +258,6 @@
                         {
                             k--;
                             if (nextDirec == 'D') currentY--;
-
                             continue;
                         }
 
@@ -303,13 +306,6 @@
                             corridorPlaces.Add([xPos, room2DoorYPos + i]);
                         }
                     }
-
-                    for (int i = 0; i < corridorPlaces.Count; i++)
-                    {
-                        int[] currentPos = corridorPlaces[i];
-
-                        Grid[currentPos[0], currentPos[1]] = true;
-                    }
                 }
 
                 // Left and Right
@@ -320,7 +316,7 @@
                     int room1DoorXPos = (currentX * gridSquareWidth) + RoomSizes[currentX, currentY, 2] - 1;
                     int room2DoorXPos = ((currentX - 1) * gridSquareWidth) + RoomSizes[currentX - 1, currentY, 2] + RoomSizes[currentX - 1, currentY, 0];
 
-                    int distance = room1DoorXPos - room2DoorXPos;
+                    int distance = room1DoorXPos - room2DoorXPos + 1;
 
                     if (distance <= 1)
                     {
@@ -333,11 +329,7 @@
                     int[] room1Places = Enumerable.Range(RoomSizes[currentX, currentY, 3], RoomSizes[currentX, currentY, 1]).ToArray();
                     int[] room2Places = Enumerable.Range(RoomSizes[currentX - 1, currentY, 3], RoomSizes[currentX - 1, currentY, 1]).ToArray();
 
-                    int room1Index;
-                    int room2Index;
-
-                    int room1DoorYPos;
-                    int room2DoorYPos;
+                    int room1Index, room2Index, room1DoorYPos, room2DoorYPos;
 
                     if (distance < 5)
                     {
@@ -347,7 +339,6 @@
                         {
                             k--;
                             if (nextDirec == 'R') currentX--;
-
                             continue;
                         }
 
@@ -400,9 +391,7 @@
 
                 for (int i = 0; i < corridorPlaces.Count; i++)
                 {
-                    int[] currentPos = corridorPlaces[i];
-
-                    Grid[currentPos[0], currentPos[1]] = true;
+                    Grid[corridorPlaces[i][0], corridorPlaces[i][1]] = true;
                 }
 
                 if (nextDirec == 'U') currentY--;
@@ -436,6 +425,263 @@
             CreateRoomSizes();
             MarkRoomsTrue();
             CreatePaths();
+        }
+
+        public void CreateCharMap()
+        {
+            for (int y = 0; y < Grid.GetLength(1); y++)
+            {
+                for (int x = 0; x < Grid.GetLength(0); x++)
+                {
+                    if (Grid[x, y])
+                    {
+                        CharMap[x, y] = '·';
+                    }
+                    else
+                    {
+                        bool[,] surrounding = new bool[3, 3];
+
+                        for (int i = -1; i <= 1; i++)
+                        {
+                            for (int j = -1; j <= 1; j++)
+                            {
+                                try
+                                {
+                                    surrounding[i + 1, j + 1] = Grid[x + i, y + j];
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    surrounding[i + 1, j + 1] = false;
+                                }
+                            }
+                        }
+
+                        if (!surrounding[0, 0] && !surrounding[1, 0] && !surrounding[2, 0] && !surrounding[0, 1] && !surrounding[2, 1] && !surrounding[0, 2] && !surrounding[1, 2] && !surrounding[2, 2])
+                        {
+                            CharMap[x, y] = ' ';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && surrounding[2, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╬';
+                        }
+                        else if (surrounding[0, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╬';
+                        }
+                        else if (surrounding[0, 2] && surrounding[2, 0] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╬';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            CharMap[x, y] = '╣';
+                        }
+                        else if (surrounding[0, 2] && surrounding[2, 2] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╦';
+                        }
+                        else if (surrounding[2, 0] && surrounding[2, 2] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            CharMap[x, y] = '╠';
+                        }
+                        else if (surrounding[2, 0] && surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╩';
+                        }
+                        else if ((surrounding[0, 0] || surrounding[0, 2]) && surrounding[2, 1] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            CharMap[x, y] = '╣';
+                        }
+                        else if ((surrounding[0, 2] || surrounding[2, 2]) && surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╦';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[2, 2]) && surrounding[0, 1] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            CharMap[x, y] = '╠';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[0, 0]) && surrounding[1, 2] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╩';
+                        }
+                        else if (surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            CharMap[x, y] = '╝';
+                        }
+                        else if (surrounding[2, 0] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╚';
+                        }
+                        else if (surrounding[2, 2] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╔';
+                        }
+                        else if (surrounding[0, 2] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            CharMap[x, y] = '╗';
+                        }
+                        else if (surrounding[1, 2] && surrounding[2, 1] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            CharMap[x, y] = '╝';
+                        }
+                        else if (surrounding[0, 2] && surrounding[1, 2] && surrounding[0, 1] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╚';
+                        }
+                        else if (surrounding[0, 0] && surrounding[1, 0] && surrounding[0, 1] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            CharMap[x, y] = '╔';
+                        }
+                        else if (surrounding[2, 0] && surrounding[1, 0] && surrounding[2, 1] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            CharMap[x, y] = '╗';
+                        }
+                        else if ((surrounding[0, 1] || surrounding[2, 1]) && (!surrounding[1, 0] || !surrounding[1, 2]))
+                        {
+                            CharMap[x, y] = '║';
+                        }
+                        else if ((surrounding[1, 2] || surrounding[1, 0]) && (!surrounding[0, 1] || !surrounding[2, 1]))
+                        {
+                            CharMap[x, y] = '═';
+                        }
+                        else
+                        {
+                            CharMap[x, y] = ' ';
+                        }
+                    }
+                }
+            }
+        }
+
+        public void CreateStringMap()
+        {
+            for (int y = 0; y < Grid.GetLength(1); y++)
+            {
+                if (y != 0)
+                {
+                    StringMap += '\n';
+                }
+
+                for (int x = 0; x < Grid.GetLength(0); x++)
+                {
+                    if (Grid[x, y])
+                    {
+                        StringMap += '·';
+                    }
+                    else
+                    {
+                        bool[,] surrounding = new bool[3, 3];
+
+                        for (int i = -1; i <= 1; i++)
+                        {
+                            for (int j = -1; j <= 1; j++)
+                            {
+                                try
+                                {
+                                    surrounding[i + 1, j + 1] = Grid[x + i, y + j];
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    surrounding[i + 1, j + 1] = false;
+                                }
+                            }
+                        }
+
+                        if (!surrounding[0, 0] && !surrounding[1, 0] && !surrounding[2, 0] && !surrounding[0, 1] && !surrounding[2, 1] && !surrounding[0, 2] && !surrounding[1, 2] && !surrounding[2, 2])
+                        {
+                            StringMap += ' ';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && surrounding[2, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╬';
+                        }
+                        else if (surrounding[0, 0] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╬';
+                        }
+                        else if (surrounding[0, 2] && surrounding[2, 0] && !surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╬';
+                        }
+                        else if (surrounding[0, 0] && surrounding[0, 2] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            StringMap += '╣';
+                        }
+                        else if (surrounding[0, 2] && surrounding[2, 2] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╦';
+                        }
+                        else if (surrounding[2, 0] && surrounding[2, 2] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            StringMap += '╠';
+                        }
+                        else if (surrounding[2, 0] && surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╩';
+                        }
+                        else if ((surrounding[0, 0] || surrounding[0, 2]) && surrounding[2, 1] && !surrounding[0, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            StringMap += '╣';
+                        }
+                        else if ((surrounding[0, 2] || surrounding[2, 2]) && surrounding[1, 0] && !surrounding[1, 2] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╦';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[2, 2]) && surrounding[0, 1] && !surrounding[2, 1] && !surrounding[1, 0] && !surrounding[1, 2])
+                        {
+                            StringMap += '╠';
+                        }
+                        else if ((surrounding[2, 0] || surrounding[0, 0]) && surrounding[1, 2] && !surrounding[1, 0] && !surrounding[0, 1] && !surrounding[2, 1])
+                        {
+                            StringMap += '╩';
+                        }
+                        else if (surrounding[0, 0] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            StringMap += '╝';
+                        }
+                        else if (surrounding[2, 0] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            StringMap += '╚';
+                        }
+                        else if (surrounding[2, 2] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            StringMap += '╔';
+                        }
+                        else if (surrounding[0, 2] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            StringMap += '╗';
+                        }
+                        else if (surrounding[1, 2] && surrounding[2, 1] && surrounding[2, 2] && !surrounding[1, 0] && !surrounding[0, 1])
+                        {
+                            StringMap += '╝';
+                        }
+                        else if (surrounding[0, 2] && surrounding[1, 2] && surrounding[0, 1] && !surrounding[1, 0] && !surrounding[2, 1])
+                        {
+                            StringMap += '╚';
+                        }
+                        else if (surrounding[0, 0] && surrounding[1, 0] && surrounding[0, 1] && !surrounding[1, 2] && !surrounding[2, 1])
+                        {
+                            StringMap += '╔';
+                        }
+                        else if (surrounding[2, 0] && surrounding[1, 0] && surrounding[2, 1] && !surrounding[1, 2] && !surrounding[0, 1])
+                        {
+                            StringMap += '╗';
+                        }
+                        else if ((surrounding[0, 1] || surrounding[2, 1]) && (!surrounding[1, 0] || !surrounding[1, 2]))
+                        {
+                            StringMap += '║';
+                        }
+                        else if ((surrounding[1, 2] || surrounding[1, 0]) && (!surrounding[0, 1] || !surrounding[2, 1]))
+                        {
+                            StringMap += '═';
+                        }
+                        else
+                        {
+                            StringMap += ' ';
+                        }
+                    }
+                }
+            }
         }
     }
 }
