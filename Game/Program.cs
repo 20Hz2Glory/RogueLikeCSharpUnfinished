@@ -11,12 +11,26 @@ namespace Game
         // Not having to declare a random everywhere is useful
         static readonly Random randNum = new();
 
-        static Map WorldMap = new(WIDTH, HEIGHT, 10, 5);
+        // Create the world map
+        static readonly Map WorldMap = new(WIDTH, HEIGHT, 10, 5);
 
         static void Main()
         {
             // Declare variable to get user key input
             ConsoleKeyInfo keyInfo;
+
+            // Dictionary of keys and their corresponding keypress meaning
+            Dictionary<ConsoleKey, char> keyDirections = new()
+            {
+                { ConsoleKey.RightArrow, 'r' },
+                { ConsoleKey.D, 'r' },
+                { ConsoleKey.LeftArrow, 'l' },
+                { ConsoleKey.A, 'l' },
+                { ConsoleKey.UpArrow, 'u' },
+                { ConsoleKey.W, 'u' },
+                { ConsoleKey.DownArrow, 'd' },
+                { ConsoleKey.S, 'd' }
+            };
 
             // Clear console, set HEIGHT and WIDTH, draw player, enemies and grid
             InitializeConsole();
@@ -27,21 +41,25 @@ namespace Game
             // Start loading iterations
             loading.Start();
 
-            // Create grid and turn it into a string
-            WorldMap.CreateFullMap();
-            WorldMap.CreateStringMap();
-            WorldMap.CreateCharMap();
+            // Create the room sizes and positions within the grid
+            WorldMap.CreateRoomSizes();
+            // Use the RoomsSizes to mark the rooms as true in the subgrid
+            WorldMap.MarkRoomsTrue();
+            // Get the player's starting coordinates now, so it starts in a room
+            (int x, int y) = PlayerStartingCoords();
+            // Create paths between rooms
+            WorldMap.CreatePaths();
+            // Create map of characters and convert them into a string for easy printing
+            WorldMap.CreateVisualMap();
 
             // Stop loading
             loading.Interrupt();
 
             // Clear console and write the map
-            Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
             Console.Write(WorldMap.StringMap);
 
-            // Gets players starting coordinates within one of the rooms and draws it there
-            (int x, int y) = PlayerStartingCoords(WorldMap.Grid);
+            // Draws the player in their starting coordinates
             DrawChar(x, y, '@', ConsoleColor.Cyan, init: true);
 
             while (true)
@@ -49,25 +67,12 @@ namespace Game
                 // Reads user's keypress
                 keyInfo = Console.ReadKey(true);
 
-                // Dictionary of keys and their corresponding keypress meaning
-                Dictionary<ConsoleKey, char> keyDirections = new()
-                {
-                    { ConsoleKey.RightArrow, 'r' },
-                    { ConsoleKey.D, 'r' },
-                    { ConsoleKey.LeftArrow, 'l' },
-                    { ConsoleKey.A, 'l' },
-                    { ConsoleKey.UpArrow, 'u' },
-                    { ConsoleKey.W, 'u' },
-                    { ConsoleKey.DownArrow, 'd' },
-                    { ConsoleKey.S, 'd' }
-                };
-
-                if (keyDirections.TryGetValue(keyInfo.Key, out char direction)) { }
+                // Get the corresponding direction for the keypress from the dictionary
+                if (!keyDirections.TryGetValue(keyInfo.Key, out char direction)) continue;
                 else if (keyInfo.Key == ConsoleKey.Escape) break;
-                else continue;
 
                 // Get the new place the user wants to move to
-                (int newX, int newY) = MoveChar(direction, x, y, WorldMap.Grid);
+                (int newX, int newY) = MoveChar(direction, x, y);
                 Console.ForegroundColor = ConsoleColor.White;
                 DrawChar(newX, newY, '@', ConsoleColor.Cyan, x, y);
 
@@ -88,11 +93,11 @@ namespace Game
             Console.Clear();
         }
 
-        static (int, int) PlayerStartingCoords(bool[,] grid)
+        static (int, int) PlayerStartingCoords()
         {
             int numOfPlaces = 0;
 
-            foreach (bool item in grid)
+            foreach (bool item in WorldMap.Grid)
             {
                 if (item)
                 {
@@ -104,11 +109,11 @@ namespace Game
 
             numOfPlaces = 0;
 
-            for (int x = 0; x < grid.GetLength(0); x++)
+            for (int x = 0; x < WorldMap.Grid.GetLength(0); x++)
             {
-                for (int y = 0; y < grid.GetLength(1); y++)
+                for (int y = 0; y < WorldMap.Grid.GetLength(1); y++)
                 {
-                    if (grid[x, y])
+                    if (WorldMap.Grid[x, y])
                     {
                         numOfPlaces++;
 
@@ -123,7 +128,7 @@ namespace Game
             return (0, 0);
         }
 
-        static (int, int) MoveChar(char direction, int oldX, int oldY, bool[,] grid)
+        static (int, int) MoveChar(char direction, int oldX, int oldY)
         {
             int newY;
             int newX;
@@ -131,23 +136,23 @@ namespace Game
             switch (direction)
             {
                 case 'l':
-                    newX = oldX != 0 && grid[oldX - 1, oldY] ? oldX - 1 : oldX;
+                    newX = oldX != 0 && WorldMap.Grid[oldX - 1, oldY] ? oldX - 1 : oldX;
                     newY = oldY;
                     break;
 
                 case 'r':
-                    newX = oldX != WIDTH - 1 && grid[oldX + 1, oldY] ? oldX + 1 : oldX;
+                    newX = oldX != WIDTH - 1 && WorldMap.Grid[oldX + 1, oldY] ? oldX + 1 : oldX;
                     newY = oldY;
                     break;
 
                 case 'u':
                     newX = oldX;
-                    newY = oldY != 0 && grid[oldX, oldY - 1] ? oldY - 1 : oldY;
+                    newY = oldY != 0 && WorldMap.Grid[oldX, oldY - 1] ? oldY - 1 : oldY;
                     break;
 
                 case 'd':
                     newX = oldX;
-                    newY = oldY != HEIGHT - 1 && grid[oldX, oldY + 1] ? oldY + 1 : oldY;
+                    newY = oldY != HEIGHT - 1 && WorldMap.Grid[oldX, oldY + 1] ? oldY + 1 : oldY;
                     break;
 
                 default:
@@ -200,7 +205,13 @@ namespace Game
             Console.Write("};");
         }
 
-        static void DrawChar(int x, int y, char charType, ConsoleColor color = ConsoleColor.White, int oldX = 0, int oldY = 0, bool init = false)
+        static void DrawChar(int x,
+                             int y,
+                             char charType,
+                             ConsoleColor color = ConsoleColor.White,
+                             int oldX = 0,
+                             int oldY = 0,
+                             bool init = false)
         {
             if (!init)
             {
