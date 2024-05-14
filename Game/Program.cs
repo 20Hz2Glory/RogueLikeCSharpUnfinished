@@ -95,16 +95,10 @@ namespace Game
 
         static (int, int) PlayerStartingCoords()
         {
-            int numOfPlaces = 0;
+            // Variable to track number of possible places
+            int numOfPlaces = WorldMap.Grid.Cast<bool>().Count(item => item);
 
-            foreach (bool item in WorldMap.Grid)
-            {
-                if (item)
-                {
-                    numOfPlaces++;
-                }
-            }
-
+            // Get a random index of the place
             int place = randNum.Next(numOfPlaces);
 
             numOfPlaces = 0;
@@ -162,47 +156,6 @@ namespace Game
             };
 
             return (newX, newY);
-        }
-
-        static void PrintIntArray(int[,,] roomSizes)
-        {
-            Console.Write("int[,,] roomSizes = {");
-
-            for (int i = 0; i < roomSizes.GetLength(0); i++)
-            {
-                if (i != 0)
-                {
-                    Console.Write(", ");
-                }
-
-                Console.Write("{");
-
-                for (int j = 0; j < roomSizes.GetLength(1); j++)
-                {
-                    if (j != 0)
-                    {
-                        Console.Write(", ");
-                    }
-
-                    Console.Write("{");
-
-                    for (int k = 0; k < roomSizes.GetLength(2); k++)
-                    {
-                        if (k != 0)
-                        {
-                            Console.Write(", ");
-                        }
-
-                        Console.Write(roomSizes[i, j, k]);
-                    }
-
-                    Console.Write("}");
-                }
-
-                Console.Write("}");
-            }
-
-            Console.Write("};");
         }
 
         static void DrawChar(int x,
